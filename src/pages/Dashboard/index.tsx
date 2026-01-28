@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Row, Col, Button, Tag } from 'antd';
 import { FileTextOutlined, SnippetsOutlined, PlusOutlined, ArrowRightOutlined, CloudOutlined, DeleteOutlined, CoffeeOutlined } from '@ant-design/icons';
 import { WordCloud } from '@ant-design/plots';
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   // 模拟数据
   const wordCloudData = [
     { text: 'React', value: 100 },
@@ -77,7 +79,10 @@ const Dashboard: React.FC = () => {
       {/* 顶部统计 - 多彩块风格 */}
       <Row gutter={[24, 24]}>
         <Col span={12}>
-          <div className="neo-card p-6 h-full flex flex-col justify-between relative overflow-hidden group">
+          <div 
+            className="neo-card p-6 h-full flex flex-col justify-between relative overflow-hidden group cursor-pointer"
+            onClick={() => navigate('/blogs')}
+          >
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
               <FileTextOutlined style={{ fontSize: '80px', color: '#3b82f6' }} />
             </div>
@@ -94,7 +99,10 @@ const Dashboard: React.FC = () => {
           </div>
         </Col>
         <Col span={12}>
-          <div className="neo-card p-6 h-full flex flex-col justify-between relative overflow-hidden group">
+          <div 
+            className="neo-card p-6 h-full flex flex-col justify-between relative overflow-hidden group cursor-pointer"
+            onClick={() => navigate('/snippets')}
+          >
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
               <CoffeeOutlined style={{ fontSize: '80px', color: '#d97706' }} />
             </div>
@@ -122,7 +130,7 @@ const Dashboard: React.FC = () => {
                    <span className="w-1 h-6 bg-blue-500 rounded-full mr-3"></span>
                    最新文章
                 </h3>
-                <Button type="link" className="text-gray-400 hover:text-white">查看全部 <ArrowRightOutlined /></Button>
+                <Button type="link" className="text-gray-400 hover:text-white" onClick={() => navigate('/blogs')}>查看全部 <ArrowRightOutlined /></Button>
              </div>
              
              <div className="space-y-4">
