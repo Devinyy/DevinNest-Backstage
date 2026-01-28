@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Row, Col, Button, Tag } from 'antd';
+import { Row, Col, Button, Tag, Modal, Input, message } from 'antd';
 import { FileTextOutlined, SnippetsOutlined, PlusOutlined, ArrowRightOutlined, CloudOutlined, DeleteOutlined, CoffeeOutlined } from '@ant-design/icons';
 import { WordCloud } from '@ant-design/plots';
 
@@ -59,6 +59,69 @@ const Dashboard: React.FC = () => {
   ];
 
   const [tags, setTags] = useState<TagType[]>(initialTagData);
+
+  const getTagColorClass = (colorName: string) => {
+    const colorMap: Record<string, string> = {
+      blue: '!bg-blue-500/15 !text-blue-400 !border-blue-500/30',
+      cyan: '!bg-cyan-500/15 !text-cyan-400 !border-cyan-500/30',
+      green: '!bg-emerald-500/15 !text-emerald-400 !border-emerald-500/30',
+      purple: '!bg-purple-500/15 !text-purple-400 !border-purple-500/30',
+      magenta: '!bg-fuchsia-500/15 !text-fuchsia-400 !border-fuchsia-500/30',
+      orange: '!bg-orange-500/15 !text-orange-400 !border-orange-500/30',
+      gold: '!bg-amber-500/15 !text-amber-400 !border-amber-500/30',
+      lime: '!bg-lime-500/15 !text-lime-400 !border-lime-500/30',
+    };
+    return colorMap[colorName] || '!bg-gray-500/15 !text-gray-400 !border-gray-500/30';
+  };
+
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [isTagModalOpen, setIsTagModalOpen] = useState(false);
+  const [newTagName, setNewTagName] = useState('');
+
+  const handleAddCategory = () => {
+    if (!newCategoryName.trim()) return;
+    
+    const colors = [
+      'bg-blue-500/10 text-blue-500',
+      'bg-purple-500/10 text-purple-500', 
+      'bg-green-500/10 text-green-500',
+      'bg-orange-500/10 text-orange-500',
+      'bg-pink-500/10 text-pink-500'
+    ];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    
+    const newCategory: CategoryType = {
+      key: Date.now().toString(),
+      name: newCategoryName,
+      count: 0,
+      icon: <CloudOutlined />,
+      color: randomColor
+    };
+
+    setCategories([...categories, newCategory]);
+    setNewCategoryName('');
+    setIsCategoryModalOpen(false);
+    message.success('分类添加成功');
+  };
+
+  const handleAddTag = () => {
+    if (!newTagName.trim()) return;
+
+    const colors = ['blue', 'cyan', 'green', 'purple', 'magenta', 'orange', 'gold', 'lime'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+    const newTag: TagType = {
+      key: Date.now().toString(),
+      name: newTagName,
+      color: randomColor
+    };
+
+    setTags([...tags, newTag]);
+    setNewTagName('');
+    setIsTagModalOpen(false);
+    message.success('标签添加成功');
+  };
 
   const handleDeleteCategory = (key: string) => {
     setCategories(categories.filter(item => item.key !== key));
@@ -171,7 +234,13 @@ const Dashboard: React.FC = () => {
            <div className="neo-card p-6">
              <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-bold text-white">分类</h3>
-                <Button type="text" shape="circle" icon={<PlusOutlined />} className="bg-white/5 hover:bg-white/10 text-gray-400" />
+                <Button 
+                  type="text" 
+                  shape="circle" 
+                  icon={<PlusOutlined />} 
+                  className="bg-white/5 hover:bg-white/10 text-gray-400"
+                  onClick={() => setIsCategoryModalOpen(true)}
+                />
              </div>
              <div className="space-y-3">
                 {categories.map(cat => (
@@ -202,7 +271,13 @@ const Dashboard: React.FC = () => {
            <div className="neo-card p-6">
              <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-bold text-white">热门标签</h3>
-                <Button type="text" shape="circle" icon={<PlusOutlined />} className="bg-white/5 hover:bg-white/10 text-gray-400" />
+                <Button 
+                  type="text" 
+                  shape="circle" 
+                  icon={<PlusOutlined />} 
+                  className="bg-white/5 hover:bg-white/10 text-gray-400"
+                  onClick={() => setIsTagModalOpen(true)}
+                />
              </div>
              <div className="flex flex-wrap gap-2">
                 {tags.map(tag => (
@@ -211,12 +286,15 @@ const Dashboard: React.FC = () => {
                      color="default"
                      closable
                      onClose={(e) => { e.preventDefault(); handleDeleteTag(tag.key); }}
-                     className="px-3 py-1.5 rounded-full border-0 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all cursor-pointer text-sm m-0 flex items-center"
+                     className={`px-3 py-1.5 rounded-full border transition-all cursor-pointer text-sm m-0 flex items-center hover:opacity-80 ${getTagColorClass(tag.color)}`}
                    >
                      {tag.name}
                    </Tag>
                 ))}
-                <Tag className="px-3 py-1.5 rounded-full border-dashed border-gray-700 bg-transparent text-gray-500 hover:text-white hover:border-gray-500 cursor-pointer text-sm m-0">
+                <Tag 
+                  className="px-3 py-1.5 rounded-full border-dashed border-gray-700 bg-transparent text-gray-500 hover:text-white hover:border-gray-500 cursor-pointer text-sm m-0"
+                  onClick={() => setIsTagModalOpen(true)}
+                >
                   + Add
                 </Tag>
              </div>
@@ -237,6 +315,47 @@ const Dashboard: React.FC = () => {
            </div>
         </Col>
       </Row>
+
+      {/* Modals */}
+      <Modal
+        title="添加分类"
+        open={isCategoryModalOpen}
+        onOk={handleAddCategory}
+        onCancel={() => setIsCategoryModalOpen(false)}
+        okText="确认"
+        cancelText="取消"
+        okButtonProps={{ 
+          disabled: !newCategoryName.trim(),
+          className: newCategoryName.trim() ? '!bg-blue-600 !text-white hover:!bg-blue-500' : ''
+        }}
+      >
+        <Input 
+          placeholder="请输入分类名称" 
+          value={newCategoryName} 
+          onChange={(e) => setNewCategoryName(e.target.value)} 
+          onPressEnter={handleAddCategory}
+        />
+      </Modal>
+
+      <Modal
+        title="添加标签"
+        open={isTagModalOpen}
+        onOk={handleAddTag}
+        onCancel={() => setIsTagModalOpen(false)}
+        okText="确认"
+        cancelText="取消"
+        okButtonProps={{ 
+          disabled: !newTagName.trim(),
+          className: newTagName.trim() ? '!bg-blue-600 !text-white hover:!bg-blue-500' : ''
+        }}
+      >
+        <Input 
+          placeholder="请输入标签名称" 
+          value={newTagName} 
+          onChange={(e) => setNewTagName(e.target.value)} 
+          onPressEnter={handleAddTag}
+        />
+      </Modal>
     </div>
   );
 };
