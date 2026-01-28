@@ -305,10 +305,21 @@ const Dashboard: React.FC = () => {
               <h3 className="text-lg font-bold text-white mb-4">写点什么？</h3>
               <p className="text-gray-400 text-sm mb-6">记录当下的想法，或者开始一篇新的技术长文。</p>
               <div className="flex space-x-3">
-                 <Button type="primary" size="large" icon={<FileTextOutlined />} className="flex-1 bg-blue-600 hover:bg-blue-500 border-none h-10 rounded-xl font-medium shadow-lg shadow-blue-900/20">
+                 <Button 
+                   type="primary" 
+                   size="large" 
+                   icon={<FileTextOutlined />} 
+                   className="flex-1 bg-blue-600 hover:bg-blue-500 border-none h-10 rounded-xl font-medium shadow-lg shadow-blue-900/20"
+                   onClick={() => navigate('/blogs/create')}
+                 >
                     写文章
                  </Button>
-                 <Button size="large" icon={<SnippetsOutlined />} className="flex-1 bg-white/10 hover:bg-white/20 border-none text-white h-10 rounded-xl font-medium backdrop-blur-sm">
+                 <Button 
+                   size="large" 
+                   icon={<SnippetsOutlined />} 
+                   className="flex-1 bg-white/10 hover:bg-white/20 border-none text-white h-10 rounded-xl font-medium backdrop-blur-sm"
+                   onClick={() => navigate('/snippets/create')}
+                 >
                     发碎片
                  </Button>
               </div>
