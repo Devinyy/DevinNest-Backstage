@@ -5,6 +5,8 @@ import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import Blogs from './pages/Blogs';
 import Snippets from './pages/Snippets';
+import Login from './pages/Login';
+import NotFound from './pages/NotFound';
 
 const App: React.FC = () => {
   return (
@@ -57,11 +59,13 @@ const App: React.FC = () => {
     >
       <BrowserRouter>
         <Routes>
+          <Route path="/login" element={<Login />} />
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="blogs" element={<Blogs />} />
             <Route path="snippets" element={<Snippets />} />
           </Route>
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </ConfigProvider>
