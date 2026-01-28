@@ -1,6 +1,6 @@
-import React from 'react';
-import { Card, Row, Col, Statistic, Table, Button, Space, Tag, Input, Modal } from 'antd';
-import { FileTextOutlined, SnippetsOutlined, PlusOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Row, Col, Button, Tag } from 'antd';
+import { FileTextOutlined, SnippetsOutlined, PlusOutlined, ArrowRightOutlined, CloudOutlined, DeleteOutlined, CoffeeOutlined } from '@ant-design/icons';
 import { WordCloud } from '@ant-design/plots';
 
 const Dashboard: React.FC = () => {
@@ -20,6 +20,8 @@ const Dashboard: React.FC = () => {
     data: wordCloudData,
     layout: { spiral: 'rectangular' },
     colorField: 'text',
+    theme: 'dark',
+    padding: 0,
   };
 
   // 分类数据
@@ -27,28 +29,17 @@ const Dashboard: React.FC = () => {
     key: string;
     name: string;
     count: number;
+    icon: React.ReactNode;
+    color: string;
   }
   
-  const categoryData: CategoryType[] = [
-    { key: '1', name: '前端开发', count: 45 },
-    { key: '2', name: '后端开发', count: 20 },
-    { key: '3', name: '随笔', count: 12 },
+  const initialCategoryData: CategoryType[] = [
+    { key: '1', name: '技术', count: 128, icon: <CloudOutlined />, color: 'bg-blue-500/10 text-blue-500' },
+    { key: '2', name: '设计', count: 75, icon: <FileTextOutlined />, color: 'bg-purple-500/10 text-purple-500' },
+    { key: '3', name: '生活', count: 92, icon: <SnippetsOutlined />, color: 'bg-green-500/10 text-green-500' },
   ];
-
-  const categoryColumns = [
-    { title: '分类名称', dataIndex: 'name', key: 'name' },
-    { title: '文章数', dataIndex: 'count', key: 'count' },
-    {
-      title: '操作',
-      key: 'action',
-      render: () => (
-        <Space size="small">
-          <Button type="link" size="small">编辑</Button>
-          <Button type="link" danger size="small">删除</Button>
-        </Space>
-      ),
-    },
-  ];
+  
+  const [categories, setCategories] = useState<CategoryType[]>(initialCategoryData);
 
   // 标签数据
   interface TagType {
@@ -57,116 +48,185 @@ const Dashboard: React.FC = () => {
     color: string;
   }
 
-  const tagData: TagType[] = [
+  const initialTagData: TagType[] = [
     { key: '1', name: 'React', color: 'blue' },
-    { key: '2', name: 'TypeScript', color: 'blue' },
+    { key: '2', name: 'TypeScript', color: 'cyan' },
     { key: '3', name: 'Life', color: 'green' },
+    { key: '4', name: 'Design', color: 'purple' },
+    { key: '5', name: 'Algorithm', color: 'magenta' },
   ];
 
-  const tagColumns = [
-    {
-      title: '标签名称',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text: string, record: TagType) => <Tag color={record.color}>{text}</Tag>,
-    },
-    {
-      title: '操作',
-      key: 'action',
-      render: () => (
-        <Space size="small">
-          <Button type="link" size="small">编辑</Button>
-          <Button type="link" danger size="small">删除</Button>
-        </Space>
-      ),
-    },
-  ];
+  const [tags, setTags] = useState<TagType[]>(initialTagData);
+
+  const handleDeleteCategory = (key: string) => {
+    setCategories(categories.filter(item => item.key !== key));
+  };
+
+  const handleDeleteTag = (key: string) => {
+    setTags(tags.filter(item => item.key !== key));
+  };
 
   const recentArticles = [
-    { key: '1', title: '深入理解 React Hooks', date: '2023-10-01' },
-    { key: '2', title: 'Node.js 性能优化实战', date: '2023-09-28' },
-    { key: '3', title: 'Ant Design 5.0 新特性解析', date: '2023-09-20' },
+    { key: '1', title: '深入理解 React Hooks', date: '08-31', year: '2025' },
+    { key: '2', title: 'Node.js 性能优化实战', date: '03-07', year: '2025' },
+    { key: '3', title: '春日短途：山海之间', date: '04-20', year: '2025' },
   ];
 
   return (
-    <div className="space-y-6">
-      {/* 顶部统计 */}
-      <Row gutter={16}>
+    <div className="space-y-8">
+      {/* 顶部统计 - 多彩块风格 */}
+      <Row gutter={[24, 24]}>
         <Col span={12}>
-          <Card variant="borderless" className="bg-gray-800">
-            <Statistic
-              title="博客总数"
-              value={112}
-              prefix={<FileTextOutlined />}
-              styles={{ content: { color: '#cf1322' } }}
-            />
-          </Card>
+          <div className="neo-card p-6 h-full flex flex-col justify-between relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <FileTextOutlined style={{ fontSize: '80px', color: '#3b82f6' }} />
+            </div>
+            <div>
+              <div className="text-gray-400 font-medium mb-1">博客总数</div>
+              <div className="text-4xl font-bold text-white">112</div>
+            </div>
+            <div className="mt-4 flex items-center text-sm text-gray-500">
+               <span className="text-green-500 flex items-center mr-2 bg-green-500/10 px-2 py-0.5 rounded-full">
+                 +5 <ArrowRightOutlined className="rotate-[-45deg] ml-1 text-xs" />
+               </span>
+               本月新增
+            </div>
+          </div>
         </Col>
         <Col span={12}>
-          <Card variant="borderless" className="bg-gray-800">
-            <Statistic
-              title="日常碎片"
-              value={28}
-              prefix={<SnippetsOutlined />}
-              styles={{ content: { color: '#3f8600' } }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* 文章概览 */}
-      <Card title="文章概览" variant="borderless">
-        <Table
-          dataSource={recentArticles}
-          columns={[
-            { title: '标题', dataIndex: 'title', key: 'title' },
-            { title: '发布日期', dataIndex: 'date', key: 'date' },
-          ]}
-          pagination={false}
-          size="small"
-        />
-      </Card>
-
-      {/* 分类与标签管理 */}
-      <Row gutter={16}>
-        <Col span={12}>
-          <Card 
-            title="分类管理" 
-            variant="borderless" 
-            extra={<Button type="primary" size="small" icon={<PlusOutlined />}>新增</Button>}
-          >
-            <Table 
-              columns={categoryColumns} 
-              dataSource={categoryData} 
-              pagination={false} 
-              size="small"
-            />
-          </Card>
-        </Col>
-        <Col span={12}>
-          <Card 
-            title="标签管理" 
-            variant="borderless"
-            extra={<Button type="primary" size="small" icon={<PlusOutlined />}>新增</Button>}
-          >
-            <Table 
-              columns={tagColumns} 
-              dataSource={tagData} 
-              pagination={false} 
-              size="small"
-            />
-          </Card>
+          <div className="neo-card p-6 h-full flex flex-col justify-between relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <CoffeeOutlined style={{ fontSize: '80px', color: '#d97706' }} />
+            </div>
+            <div>
+              <div className="text-gray-400 font-medium mb-1">日常碎片</div>
+              <div className="text-4xl font-bold text-white">28</div>
+            </div>
+            <div className="mt-4 flex items-center text-sm text-gray-500">
+               <span className="text-amber-600 flex items-center mr-2 bg-amber-500/10 px-2 py-0.5 rounded-full">
+                 +12 <ArrowRightOutlined className="rotate-[-45deg] ml-1 text-xs" />
+               </span>
+               本月新增
+            </div>
+          </div>
         </Col>
       </Row>
 
-      {/* 词云 */}
-      <Row gutter={16}>
-        <Col span={24}>
-           <Card title="内容词云" variant="borderless">
-              <div style={{ height: 400 }}>
+      <Row gutter={[24, 24]}>
+        {/* 左侧主要内容 */}
+        <Col span={16} className="space-y-8">
+           {/* 文章概览 */}
+           <div className="neo-card p-6">
+             <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-white flex items-center">
+                   <span className="w-1 h-6 bg-blue-500 rounded-full mr-3"></span>
+                   最新文章
+                </h3>
+                <Button type="link" className="text-gray-400 hover:text-white">查看全部 <ArrowRightOutlined /></Button>
+             </div>
+             
+             <div className="space-y-4">
+                {recentArticles.map((article) => (
+                   <div key={article.key} className="flex items-center p-4 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
+                      <div className="w-16 text-center mr-4">
+                         <div className="text-xs text-gray-500">{article.year}</div>
+                         <div className="text-lg font-bold text-gray-300 group-hover:text-blue-400 transition-colors">{article.date}</div>
+                      </div>
+                      <div className="flex-1">
+                         <div className="text-base font-medium text-white group-hover:text-blue-400 transition-colors">{article.title}</div>
+                      </div>
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500">
+                         <ArrowRightOutlined />
+                      </div>
+                   </div>
+                ))}
+             </div>
+           </div>
+
+           {/* 词云 */}
+           <div className="neo-card p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-white flex items-center">
+                   <span className="w-1 h-6 bg-purple-500 rounded-full mr-3"></span>
+                   内容词云
+                </h3>
+             </div>
+              <div style={{ height: 300 }}>
                  <WordCloud {...config} />
               </div>
-           </Card>
+           </div>
+        </Col>
+
+        {/* 右侧侧边栏 */}
+        <Col span={8} className="space-y-8">
+           {/* 分类管理 */}
+           <div className="neo-card p-6">
+             <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-white">分类</h3>
+                <Button type="text" shape="circle" icon={<PlusOutlined />} className="bg-white/5 hover:bg-white/10 text-gray-400" />
+             </div>
+             <div className="space-y-3">
+                {categories.map(cat => (
+                   <div key={cat.key} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
+                      <div className="flex items-center space-x-3">
+                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${cat.color}`}>
+                            {cat.icon}
+                         </div>
+                         <span className="text-gray-200 font-medium">{cat.name}</span>
+                      </div>
+                      <div className="flex items-center">
+                         <span className="text-xs text-gray-500 bg-black/20 px-2 py-1 rounded-full group-hover:hidden">{cat.count} 篇</span>
+                         <Button 
+                            type="text" 
+                            danger 
+                            size="small" 
+                            icon={<DeleteOutlined />} 
+                            className="hidden group-hover:flex" 
+                            onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat.key); }}
+                         />
+                      </div>
+                   </div>
+                ))}
+             </div>
+           </div>
+
+           {/* 标签管理 */}
+           <div className="neo-card p-6">
+             <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-white">热门标签</h3>
+                <Button type="text" shape="circle" icon={<PlusOutlined />} className="bg-white/5 hover:bg-white/10 text-gray-400" />
+             </div>
+             <div className="flex flex-wrap gap-2">
+                {tags.map(tag => (
+                   <Tag 
+                     key={tag.key} 
+                     color="default"
+                     closable
+                     onClose={(e) => { e.preventDefault(); handleDeleteTag(tag.key); }}
+                     className="px-3 py-1.5 rounded-full border-0 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all cursor-pointer text-sm m-0 flex items-center"
+                   >
+                     {tag.name}
+                   </Tag>
+                ))}
+                <Tag className="px-3 py-1.5 rounded-full border-dashed border-gray-700 bg-transparent text-gray-500 hover:text-white hover:border-gray-500 cursor-pointer text-sm m-0">
+                  + Add
+                </Tag>
+             </div>
+           </div>
+           
+           {/* 快捷操作 */}
+           <div className="neo-card p-6 bg-gradient-to-br from-blue-600/20 to-purple-600/20 border-blue-500/20">
+              <h3 className="text-lg font-bold text-white mb-4">写点什么？</h3>
+              <p className="text-gray-400 text-sm mb-6">记录当下的想法，或者开始一篇新的技术长文。</p>
+              <div className="flex space-x-3">
+                 <Button type="primary" size="large" icon={<FileTextOutlined />} className="flex-1 bg-blue-600 hover:bg-blue-500 border-none h-10 rounded-xl font-medium shadow-lg shadow-blue-900/20">
+                    写文章
+                 </Button>
+                 <Button size="large" icon={<SnippetsOutlined />} className="flex-1 bg-white/10 hover:bg-white/20 border-none text-white h-10 rounded-xl font-medium backdrop-blur-sm">
+                    发碎片
+                 </Button>
+              </div>
+           </div>
         </Col>
       </Row>
     </div>
