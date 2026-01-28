@@ -7,6 +7,7 @@ import Blogs from './pages/Blogs';
 import Snippets from './pages/Snippets';
 import Login from './pages/Login';
 import NotFound from './pages/NotFound';
+import RequireAuth from './components/RequireAuth';
 
 const App: React.FC = () => {
   return (
@@ -60,7 +61,11 @@ const App: React.FC = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<MainLayout />}>
+          <Route path="/" element={
+            <RequireAuth>
+              <MainLayout />
+            </RequireAuth>
+          }>
             <Route index element={<Dashboard />} />
             <Route path="blogs" element={<Blogs />} />
             <Route path="snippets" element={<Snippets />} />
