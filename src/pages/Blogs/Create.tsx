@@ -224,6 +224,7 @@ const CreateBlog: React.FC = () => {
     const frontmatter = [
       '---',
       `title: ${values.title || ''}`,
+      `subtitle: ${values.subtitle || ''}`,
       `date: ${new Date().toISOString()}`,
       `tags: [${(values.tags || []).join(', ')}]`,
       `categories: ${values.category || ''}`,
@@ -294,11 +295,22 @@ const CreateBlog: React.FC = () => {
               <Form.Item
                 name="title"
                 rules={[{ required: true, message: '请输入文章标题' }]}
-                className="mb-6"
+                className="mb-0"
               >
                 <Input 
                   placeholder="请输入文章标题..." 
                   className="text-2xl font-bold bg-transparent border-none placeholder-gray-600 focus:shadow-none px-0 py-2 !text-white"
+                  bordered={false} 
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="subtitle"
+                className="mb-6"
+              >
+                <Input 
+                  placeholder="请输入副标题..." 
+                  className="text-lg font-medium bg-transparent border-none placeholder-gray-600 focus:shadow-none px-0 py-1 !text-gray-300"
                   bordered={false} 
                 />
               </Form.Item>
