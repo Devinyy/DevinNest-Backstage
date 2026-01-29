@@ -1,6 +1,8 @@
 import React from 'react';
 import { Table, Button, Space, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { useNavigate } from 'react-router-dom';
+import { PlusOutlined } from '@ant-design/icons';
 
 interface DataType {
   key: string;
@@ -11,6 +13,8 @@ interface DataType {
 }
 
 const Blogs: React.FC = () => {
+  const navigate = useNavigate();
+
   const columns: ColumnsType<DataType> = [
     {
       title: '标题',
@@ -75,7 +79,14 @@ const Blogs: React.FC = () => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold">博客列表</h2>
-        <Button type="primary">新增博客</Button>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />}
+          className="!bg-white/10 hover:!bg-white/20 !border-none !text-white backdrop-blur-sm"
+          onClick={() => navigate('/blogs/create')}
+        >
+          新增博客
+        </Button>
       </div>
       <Table columns={columns} dataSource={data} />
     </div>
