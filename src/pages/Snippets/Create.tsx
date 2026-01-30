@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Upload, Card, message, Select, DatePicker, Space, Divider, Tooltip, Row, Col, Typography, Modal } from 'antd';
+import { Form, Input, Button, Upload, Card, message, Select, DatePicker, Space } from 'antd';
 import { 
-  ArrowLeftOutlined, 
-  SendOutlined, 
-  SaveOutlined, 
   PlusOutlined, 
   DeleteOutlined, 
   UpOutlined, 
@@ -17,7 +14,10 @@ import {
   EnvironmentOutlined,
   CalendarOutlined,
   CloudOutlined,
-  TagOutlined
+  TagOutlined,
+  ArrowLeftOutlined,
+  SaveOutlined,
+  SendOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
@@ -25,7 +25,6 @@ import type { UploadFile } from 'antd/es/upload/interface';
 
 const { TextArea } = Input;
 const { Option } = Select;
-const { Text } = Typography;
 
 // --- Interfaces ---
 
@@ -92,7 +91,7 @@ const BlockWrapper: React.FC<{
   title: string;
   icon: React.ReactNode;
   children: React.ReactNode;
-}> = ({ block, onDelete, onMoveUp, onMoveDown, isFirst, isLast, title, icon, children }) => {
+}> = ({ onDelete, onMoveUp, onMoveDown, isFirst, isLast, title, icon, children }) => {
   return (
     <Card 
       className="mb-4 bg-[#1f1f1f] border border-gray-800 hover:border-gray-700 transition-colors" 

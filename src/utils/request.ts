@@ -1,6 +1,7 @@
 import { createAlova, type Method } from 'alova'; 
 import adapterFetch from 'alova/fetch'; 
 import { retry } from 'alova/server'; 
+import { message } from 'antd';
 
 // 定义 API 响应的基础结构 
 export interface ApiResponse<T = any> { 
@@ -79,27 +80,21 @@ export const alovaInstance = createAlova({
   }, 
 
   responded: { 
-    onSuccess: async (response, method) => { 
-      const isJson = response.headers.get('content-type')?.includes('json'); 
-      
-      if (isJson) { 
-        const json = await response.json(); 
-        // 业务状态码处理 
-        if (json.code !== undefined && json.code !== 200) { 
-          throw new Error(json.message || '业务请求失败'); 
-        } 
-        return json.data !== undefined ? json.data : json; 
-      } 
-      return response.blob(); 
-    }, 
-    
-    onError: (err, method) => { 
-      // 可以在这里统一处理，也可以在 catch 中处理 
-      // 抛出错误以便在组件中可以捕获 
-      throw err; 
-    } 
-  } 
-}); 
+    onSuccess: async (response) => {
+      // 1. 全局处理响应数据
+      const data = await response.json();
+      return data;
+    },
+
+    // 响应错误拦截器
+    onError: (err) => {
+      // 1. 全局错误处理
+      console.error('Request Error:', err);
+      message.error(err.message || '网络请求失败');
+      throw err;
+    }
+  }
+});
 
 /** 
  * 通用请求封装类 

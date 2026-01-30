@@ -10,7 +10,8 @@ import 'react-markdown-editor-lite/lib/index.css';
 // 支持语法：![alt](url =100x100) 或 ![alt](url#100x100)
 // 注意：标准 Markdown 解析可能会因为空格截断 URL，推荐使用无空格的 # 语法
 const imageResizePlugin = (md: MarkdownIt) => {
-  const defaultRender = md.renderer.rules.image || function(tokens, idx, options, env, self) {
+  // 自定义图片渲染
+  const defaultRender = md.renderer.rules.image || function(tokens, idx, options, _env, self) {
     return self.renderToken(tokens, idx, options);
   };
 
@@ -20,12 +21,11 @@ const imageResizePlugin = (md: MarkdownIt) => {
     
     if (srcIndex >= 0) {
       const src = token.attrs![srcIndex][1];
-      // 匹配 #100x100 或 =100x100 结尾的语法
-      // 例如：image.png#100x200
-      const match = src.match(/[#=]([0-9]*)[xX]([0-9]*)$/);
+      // 匹配 =WxH 或 #WxH 格式
+      const match = src.match(/[=#](\d+)x(\d+)$/);
       
       if (match) {
-         const [full, w, h] = match;
+        const [_, w, h] = match;
          // 只有当至少有一个数字时才处理
          if (w || h) {
            // 移除 URL 末尾的尺寸参数，保留原始 URL 路径

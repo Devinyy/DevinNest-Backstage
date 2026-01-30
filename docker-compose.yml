@@ -1,0 +1,10 @@
+services:
+  devinnestback:
+    container_name: devinnestback
+    build:
+      context: .
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      - TZ=Asia/Shanghai
