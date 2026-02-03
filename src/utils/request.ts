@@ -2,6 +2,7 @@ import { createAlova, type Method } from 'alova';
 import adapterFetch from 'alova/fetch'; 
 import { retry } from 'alova/server'; 
 import { message } from 'antd';
+import { useAuthStore } from '../stores/authStore';
 
 // 定义 API 响应的基础结构 
 export interface ApiResponse<T = any> { 
@@ -77,20 +78,48 @@ export const alovaInstance = createAlova({
       method.config.headers['Content-Type'] = 'application/json'; 
     } 
     // 可以在这里注入 Token 等通用 Header 
-  }, 
+    // 登录接口无需 Token
+    if (!method.url.includes('/auth/login')) {
+      const token = useAuthStore.getState().token;
+      if (token) {
+        method.config.headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+  },  
 
   responded: { 
     onSuccess: async (response) => {
       // 1. 全局处理响应数据
-      const data = await response.json();
-      return data;
+      const json = await response.json();
+      if (json.code !== 200) {
+        throw new Error(json.message || '请求失败');
+      }
+      return json.data;
     },
 
     // 响应错误拦截器
-    onError: (err) => {
+    onError: async (err) => {
+      let errorMessage = err.message || '请求失败';
+      
+      // 尝试解析响应体中的错误信息
+      if (err.response) {
+        try {
+          const json = await err.response.json();
+          if (json.message) {
+            errorMessage = json.message;
+          } else if (json.detail) {
+            // FastAPI 默认错误格式
+            errorMessage = typeof json.detail === 'string' ? json.detail : JSON.stringify(json.detail);
+          }
+        } catch (e) {
+          // 解析失败，使用状态码文本
+          errorMessage = err.response.statusText || errorMessage;
+        }
+      }
+
       // 1. 全局错误处理
-      console.error('Request Error:', err);
-      message.error(err.message || '网络请求失败');
+      console.error('Request Error:', err, errorMessage);
+      message.error(errorMessage);
       throw err;
     }
   }

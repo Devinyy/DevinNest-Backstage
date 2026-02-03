@@ -3,6 +3,8 @@ import { Form, Input, Button, message } from 'antd';
 import { UserOutlined, LockOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
+import { JSEncrypt } from 'jsencrypt';
+import { login as loginApi, getPublicKey } from '../../api/auth';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -13,17 +15,41 @@ const Login: React.FC = () => {
 
   const from = location.state?.from?.pathname || '/';
 
-  const onFinish = (values: any) => {
+  const onFinish = async (values: any) => {
     console.log('Received values of form: ', values);
-    // 模拟登录
-    if (values.username === 'admin' && values.password === 'admin') {
+    
+    try {
+      // 1. 获取后端公钥
+      const { publicKey } = await getPublicKey();
+      console.log('publicKey: ', publicKey);
+      // 2. 使用 RSA 公钥加密密码
+      const encryptor = new JSEncrypt();
+      encryptor.setPublicKey(publicKey);
+      const encryptedPassword = encryptor.encrypt(values.password);
+
+      if (!encryptedPassword) {
+        messageApi.error('加密失败');
+        return;
+      }
+
+      console.log('Encrypted password:', encryptedPassword);
+
+      // 3. 发送登录请求
+      const res = await loginApi({
+        username: values.username,
+        password: encryptedPassword
+      });
+
       messageApi.success('登录成功，正在跳转...');
-      login(values.username);
+      // 更新状态
+      login(res.userInfo, res.token);
+      
       setTimeout(() => {
         navigate(from, { replace: true });
       }, 1000);
-    } else {
-      messageApi.error('账号或密码错误 (admin/admin)');
+    } catch (error) {
+      console.error('Login failed:', error);
+      // 错误已由全局拦截器处理，此处可做额外处理
     }
   };
 

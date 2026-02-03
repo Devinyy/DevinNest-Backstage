@@ -1,5 +1,5 @@
 import React from 'react';
-import { List, Card, Button } from 'antd';
+import { Card, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { PlusOutlined } from '@ant-design/icons';
 
@@ -34,17 +34,13 @@ const Snippets: React.FC = () => {
           发布碎片
         </Button>
       </div>
-      <List
-        grid={{ gutter: 16, column: 3 }}
-        dataSource={data}
-        renderItem={(item) => (
-          <List.Item>
-            <Card title={item.title} extra={<Button type="link">编辑</Button>}>
-              {item.content}
-            </Card>
-          </List.Item>
-        )}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {data.map((item, index) => (
+          <Card key={index} title={item.title} extra={<Button type="link">编辑</Button>}>
+            {item.content}
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };
