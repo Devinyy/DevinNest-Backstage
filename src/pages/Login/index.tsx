@@ -16,12 +16,10 @@ const Login: React.FC = () => {
   const from = location.state?.from?.pathname || '/';
 
   const onFinish = async (values: any) => {
-    console.log('Received values of form: ', values);
     
     try {
       // 1. 获取后端公钥
       const { publicKey } = await getPublicKey();
-      console.log('publicKey: ', publicKey);
       // 2. 使用 RSA 公钥加密密码
       const encryptor = new JSEncrypt();
       encryptor.setPublicKey(publicKey);
@@ -31,8 +29,6 @@ const Login: React.FC = () => {
         messageApi.error('加密失败');
         return;
       }
-
-      console.log('Encrypted password:', encryptedPassword);
 
       // 3. 发送登录请求
       const res = await loginApi({
