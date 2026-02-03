@@ -1,22 +1,126 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Row, Col, Button, Tag, Modal, Input, message } from 'antd';
-import { FileTextOutlined, SnippetsOutlined, PlusOutlined, ArrowRightOutlined, CloudOutlined, DeleteOutlined, CoffeeOutlined } from '@ant-design/icons';
+import { Row, Col, Button, Tag, message, Modal, Form, Input, Spin, Select, Space, AutoComplete } from 'antd';
+import { 
+  FileTextOutlined, 
+  PlusOutlined, 
+  ArrowRightOutlined, 
+  CloudOutlined, 
+  DeleteOutlined, 
+  CoffeeOutlined, 
+  EditOutlined,
+  CodeOutlined,
+  FormatPainterOutlined,
+  SendOutlined,
+  ReadOutlined,
+  CameraOutlined,
+  HomeOutlined
+} from '@ant-design/icons';
 import { WordCloud } from '@ant-design/plots';
+import { getDashboardStats, type DashboardStats } from '../../api/dashboard';
+import { getBlogs, type Blog } from '../../api/blogs';
+import { 
+  getCategories, 
+  getTags, 
+  deleteCategory, 
+  deleteTag, 
+  createCategory,
+  createTag,
+  updateCategory,
+  updateTag,
+  type Category, 
+  type Tag as TagInterface,
+  type CreateCategoryParams,
+  type CreateTagParams
+} from '../../api/taxonomy';
+import dayjs from 'dayjs';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  // 模拟数据
-  const wordCloudData = [
-    { text: 'React', value: 100 },
-    { text: 'Vue', value: 80 },
-    { text: 'Node.js', value: 60 },
-    { text: 'TypeScript', value: 70 },
-    { text: 'Ant Design', value: 50 },
-    { text: 'Next.js', value: 40 },
-    { text: 'Vite', value: 55 },
-    { text: 'Webpack', value: 30 },
+
+  const iconMap: Record<string, React.ReactNode> = {
+    'CodeOutlined': <CodeOutlined />,
+    'FormatPainterOutlined': <FormatPainterOutlined />,
+    'CoffeeOutlined': <CoffeeOutlined />,
+    'SendOutlined': <SendOutlined />,
+    'ReadOutlined': <ReadOutlined />,
+    'CameraOutlined': <CameraOutlined />,
+    'HomeOutlined': <HomeOutlined />,
+    'CloudOutlined': <CloudOutlined />
+  };
+
+  const iconOptions = [
+    { label: '代码', value: 'CodeOutlined', icon: <CodeOutlined /> },
+    { label: '画板', value: 'FormatPainterOutlined', icon: <FormatPainterOutlined /> },
+    { label: '咖啡', value: 'CoffeeOutlined', icon: <CoffeeOutlined /> },
+    { label: '飞机', value: 'SendOutlined', icon: <SendOutlined /> },
+    { label: '书籍', value: 'ReadOutlined', icon: <ReadOutlined /> },
+    { label: '相机', value: 'CameraOutlined', icon: <CameraOutlined /> },
+    { label: '云朵', value: 'CloudOutlined', icon: <CloudOutlined /> },
   ];
+  
+  const colorOptions = [
+    { label: '技术', value: 'bg-blue-500/10 text-blue-500', color: '#3b82f6' },
+    { label: '设计', value: 'bg-purple-500/10 text-purple-500', color: '#a855f7' },
+    { label: '生活', value: 'bg-orange-500/10 text-orange-500', color: '#f97316' },
+    { label: '旅行', value: 'bg-cyan-500/10 text-cyan-500', color: '#06b6d4' },
+    { label: '阅读', value: 'bg-amber-500/10 text-amber-500', color: '#f59e0b' },
+    { label: '摄影', value: 'bg-emerald-500/10 text-emerald-500', color: '#10b981' },
+    { label: '默认', value: 'bg-gray-500/10 text-gray-500', color: '#6b7280' },
+  ];
+
+  const [stats, setStats] = useState<DashboardStats>({
+    blogsCount: 0,
+    snippetsCount: 0,
+    categoriesCount: 0,
+    tagsCount: 0,
+    latestActivity: []
+  });
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<TagInterface[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Modal states
+  const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
+  const [isTagModalVisible, setIsTagModalVisible] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingTag, setEditingTag] = useState<TagInterface | null>(null);
+  const [categoryForm] = Form.useForm();
+  const [tagForm] = Form.useForm();
+
+  // 初始化数据
+  const fetchData = async (silent = false) => {
+    try {
+      if (!silent) setLoading(true);
+      const [statsRes, blogsRes, categoriesRes, tagsRes] = await Promise.all([
+        getDashboardStats(),
+        getBlogs({ page: 1, pageSize: 5 }),
+        getCategories(),
+        getTags()
+      ]);
+      
+      setStats(statsRes);
+      setBlogs(blogsRes.list);
+      setCategories(categoriesRes);
+      setTags(tagsRes);
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+      message.error('获取仪表盘数据失败，请稍后重试');
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // 转换标签数据为词云格式
+  const wordCloudData = tags.map(tag => ({
+    text: tag.name,
+    value: tag.count || 1, // 如果没有 count，默认为 1
+  }));
 
   const config = {
     data: wordCloudData,
@@ -25,42 +129,44 @@ const Dashboard: React.FC = () => {
     theme: 'dark',
     padding: 0,
   };
-
-  // 分类数据
-  interface CategoryType {
-    key: string;
-    name: string;
-    count: number;
-    icon: React.ReactNode;
-    color: string;
-  }
   
-  const initialCategoryData: CategoryType[] = [
-    { key: '1', name: '技术', count: 128, icon: <CloudOutlined />, color: 'bg-blue-500/10 text-blue-500' },
-    { key: '2', name: '设计', count: 75, icon: <FileTextOutlined />, color: 'bg-purple-500/10 text-purple-500' },
-    { key: '3', name: '生活', count: 92, icon: <SnippetsOutlined />, color: 'bg-green-500/10 text-green-500' },
-  ];
-  
-  const [categories, setCategories] = useState<CategoryType[]>(initialCategoryData);
+  const getTagColorClass = (colorName?: string, tagName?: string) => {
+    // 自动映射标签名称到颜色
+    const autoColorMap: Record<string, string> = {
+      'JavaScript': 'gold',
+      'TypeScript': 'blue',
+      'Node.js': 'green',
+      'React': 'cyan',
+      'Vue': 'lime',
+      'CSS': 'purple',
+      'Python': 'blue',
+      'Webpack': 'cyan',
+      'AI': 'magenta',
+      '算法': 'purple',
+      '美食': 'orange',
+      '休闲娱乐': 'lime',
+      '游戏': 'cyan'
+    };
+ 
+    const finalColorName = (() => {
+      if (colorName) return colorName;
+      
+      if (tagName) {
+        if (autoColorMap[tagName]) return autoColorMap[tagName];
+        
+        // 如果没有预设映射，则根据标签名生成固定的随机颜色
+        const availableColors = ['blue', 'cyan', 'green', 'purple', 'magenta', 'orange', 'gold', 'lime'];
+        let hash = 0;
+        for (let i = 0; i < tagName.length; i++) {
+          hash = tagName.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const index = Math.abs(hash) % availableColors.length;
+        return availableColors[index];
+      }
+      
+      return 'blue';
+    })();
 
-  // 标签数据
-  interface TagType {
-    key: string;
-    name: string;
-    color: string;
-  }
-
-  const initialTagData: TagType[] = [
-    { key: '1', name: 'React', color: 'blue' },
-    { key: '2', name: 'TypeScript', color: 'cyan' },
-    { key: '3', name: 'Life', color: 'green' },
-    { key: '4', name: 'Design', color: 'purple' },
-    { key: '5', name: 'Algorithm', color: 'magenta' },
-  ];
-
-  const [tags, setTags] = useState<TagType[]>(initialTagData);
-
-  const getTagColorClass = (colorName: string) => {
     const colorMap: Record<string, string> = {
       blue: '!bg-blue-500/15 !text-blue-400 !border-blue-500/30',
       cyan: '!bg-cyan-500/15 !text-cyan-400 !border-cyan-500/30',
@@ -71,301 +177,419 @@ const Dashboard: React.FC = () => {
       gold: '!bg-amber-500/15 !text-amber-400 !border-amber-500/30',
       lime: '!bg-lime-500/15 !text-lime-400 !border-lime-500/30',
     };
-    return colorMap[colorName] || '!bg-gray-500/15 !text-gray-400 !border-gray-500/30';
+    return colorMap[finalColorName] || '!bg-gray-500/15 !text-gray-400 !border-gray-500/30';
   };
 
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [isTagModalOpen, setIsTagModalOpen] = useState(false);
-  const [newTagName, setNewTagName] = useState('');
-
-  const handleAddCategory = () => {
-    if (!newCategoryName.trim()) return;
-    
-    const colors = [
-      'bg-blue-500/10 text-blue-500',
-      'bg-purple-500/10 text-purple-500', 
-      'bg-green-500/10 text-green-500',
-      'bg-orange-500/10 text-orange-500',
-      'bg-pink-500/10 text-pink-500'
-    ];
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-    
-    const newCategory: CategoryType = {
-      key: Date.now().toString(),
-      name: newCategoryName,
-      count: 0,
-      icon: <CloudOutlined />,
-      color: randomColor
-    };
-
-    setCategories([...categories, newCategory]);
-    setNewCategoryName('');
-    setIsCategoryModalOpen(false);
-    message.success('分类添加成功');
+  const handleCategorySubmit = async (values: CreateCategoryParams) => {
+    try {
+      if (editingCategory) {
+        await updateCategory(editingCategory.id, values);
+        message.success('分类更新成功');
+      } else {
+        await createCategory(values);
+        message.success('分类创建成功');
+      }
+      setIsCategoryModalVisible(false);
+      setEditingCategory(null);
+      categoryForm.resetFields();
+      // Refresh all data silently
+      await fetchData(true);
+    } catch (error) {
+      console.error('Category operation failed:', error);
+      message.error(editingCategory ? '更新分类失败' : '创建分类失败');
+    }
   };
 
-  const handleAddTag = () => {
-    if (!newTagName.trim()) return;
-
-    const colors = ['blue', 'cyan', 'green', 'purple', 'magenta', 'orange', 'gold', 'lime'];
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-
-    const newTag: TagType = {
-      key: Date.now().toString(),
-      name: newTagName,
-      color: randomColor
-    };
-
-    setTags([...tags, newTag]);
-    setNewTagName('');
-    setIsTagModalOpen(false);
-    message.success('标签添加成功');
+  const handleTagSubmit = async (values: CreateTagParams) => {
+    try {
+      if (editingTag) {
+        await updateTag(editingTag.id, values);
+        message.success('标签更新成功');
+      } else {
+        await createTag(values);
+        message.success('标签创建成功');
+      }
+      setIsTagModalVisible(false);
+      setEditingTag(null);
+      tagForm.resetFields();
+      // Refresh all data silently
+      await fetchData(true);
+    } catch (error) {
+      console.error('Tag operation failed:', error);
+      message.error(editingTag ? '更新标签失败' : '创建标签失败');
+    }
   };
 
-  const handleDeleteCategory = (key: string) => {
-    setCategories(categories.filter(item => item.key !== key));
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category);
+    categoryForm.setFieldsValue({
+      name: category.name,
+      icon: category.icon,
+      color: category.color
+    });
+    setIsCategoryModalVisible(true);
   };
 
-  const handleDeleteTag = (key: string) => {
-    setTags(tags.filter(item => item.key !== key));
+  const handleEditTag = (tag: TagInterface) => {
+    setEditingTag(tag);
+    tagForm.setFieldsValue({
+      name: tag.name,
+      color: tag.color
+    });
+    setIsTagModalVisible(true);
   };
 
-  const recentArticles = [
-    { key: '1', title: '深入理解 React Hooks', date: '08-31', year: '2025' },
-    { key: '2', title: 'Node.js 性能优化实战', date: '03-07', year: '2025' },
-    { key: '3', title: '春日短途：山海之间', date: '04-20', year: '2025' },
-  ];
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      await deleteCategory(id);
+      message.success('删除成功');
+      // Refresh all data silently
+      await fetchData(true);
+    } catch (error) {
+      console.error('Delete category failed:', error);
+      message.error('删除分类失败');
+    }
+  };
+
+  const handleDeleteTag = async (id: string) => {
+    try {
+      await deleteTag(id);
+      message.success('删除成功');
+      // Refresh all data silently
+      await fetchData(true);
+    } catch (error) {
+      console.error('Delete tag failed:', error);
+      message.error('删除标签失败');
+    }
+  };
 
   return (
-    <div className="space-y-8">
-      {/* 顶部统计 - 多彩块风格 */}
-      <Row gutter={[24, 24]}>
-        <Col span={12}>
-          <div 
-            className="neo-card p-6 h-full flex flex-col justify-between relative overflow-hidden group cursor-pointer"
-            onClick={() => navigate('/blogs')}
-          >
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <FileTextOutlined style={{ fontSize: '80px', color: '#3b82f6' }} />
-            </div>
-            <div>
-              <div className="text-gray-400 font-medium mb-1">博客总数</div>
-              <div className="text-4xl font-bold text-white">112</div>
-            </div>
-            <div className="mt-4 flex items-center text-sm text-gray-500">
-               <span className="text-green-500 flex items-center mr-2 bg-green-500/10 px-2 py-0.5 rounded-full">
-                 +5 <ArrowRightOutlined className="rotate-[-45deg] ml-1 text-xs" />
-               </span>
-               本月新增
-            </div>
-          </div>
-        </Col>
-        <Col span={12}>
-          <div 
-            className="neo-card p-6 h-full flex flex-col justify-between relative overflow-hidden group cursor-pointer"
-            onClick={() => navigate('/snippets')}
-          >
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <CoffeeOutlined style={{ fontSize: '80px', color: '#d97706' }} />
-            </div>
-            <div>
-              <div className="text-gray-400 font-medium mb-1">日常碎片</div>
-              <div className="text-4xl font-bold text-white">28</div>
-            </div>
-            <div className="mt-4 flex items-center text-sm text-gray-500">
-               <span className="text-amber-600 flex items-center mr-2 bg-amber-500/10 px-2 py-0.5 rounded-full">
-                 +12 <ArrowRightOutlined className="rotate-[-45deg] ml-1 text-xs" />
-               </span>
-               本月新增
-            </div>
-          </div>
-        </Col>
-      </Row>
-
-      <Row gutter={[24, 24]}>
-        {/* 左侧主要内容 */}
-        <Col span={16} className="space-y-8">
-           {/* 文章概览 */}
-           <div className="neo-card p-6">
-             <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-bold text-white flex items-center">
-                   <span className="w-1 h-6 bg-blue-500 rounded-full mr-3"></span>
-                   最新文章
-                </h3>
-                <Button type="link" className="text-gray-400 hover:text-white" onClick={() => navigate('/blogs')}>查看全部 <ArrowRightOutlined /></Button>
-             </div>
-             
-             <div className="space-y-4">
-                {recentArticles.map((article) => (
-                   <div key={article.key} className="flex items-center p-4 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
-                      <div className="w-16 text-center mr-4">
-                         <div className="text-xs text-gray-500">{article.year}</div>
-                         <div className="text-lg font-bold text-gray-300 group-hover:text-blue-400 transition-colors">{article.date}</div>
-                      </div>
-                      <div className="flex-1">
-                         <div className="text-base font-medium text-white group-hover:text-blue-400 transition-colors">{article.title}</div>
-                      </div>
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500">
-                         <ArrowRightOutlined />
-                      </div>
-                   </div>
-                ))}
-             </div>
-           </div>
-
-           {/* 词云 */}
-           <div className="neo-card p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-bold text-white flex items-center">
-                   <span className="w-1 h-6 bg-purple-500 rounded-full mr-3"></span>
-                   内容词云
-                </h3>
-             </div>
-              <div style={{ height: 300 }}>
-                 <WordCloud {...config} />
+    <div className="min-h-screen">
+      <Spin spinning={loading} size="large" tip="加载数据中...">
+        <div className="space-y-8">
+          {/* 顶部统计 - 多彩块风格 */}
+          <Row gutter={[24, 24]} className="items-stretch">
+          <Col span={12}>
+            <div 
+              className="neo-card p-6 h-full flex flex-col justify-between relative overflow-hidden group cursor-pointer"
+              onClick={() => navigate('/blogs')}
+            >
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <FileTextOutlined style={{ fontSize: '80px', color: '#3b82f6' }} />
               </div>
-           </div>
-        </Col>
-
-        {/* 右侧侧边栏 */}
-        <Col span={8} className="space-y-8">
-           {/* 分类管理 */}
-           <div className="neo-card p-6">
-             <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-bold text-white">分类</h3>
-                <Button 
-                  type="text" 
-                  shape="circle" 
-                  icon={<PlusOutlined />} 
-                  className="bg-white/5 hover:bg-white/10 text-gray-400"
-                  onClick={() => setIsCategoryModalOpen(true)}
-                />
-             </div>
-             <div className="space-y-3">
-                {categories.map(cat => (
-                   <div key={cat.key} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
-                      <div className="flex items-center space-x-3">
-                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${cat.color}`}>
-                            {cat.icon}
-                         </div>
-                         <span className="text-gray-200 font-medium">{cat.name}</span>
-                      </div>
-                      <div className="flex items-center">
-                         <span className="text-xs text-gray-500 bg-black/20 px-2 py-1 rounded-full group-hover:hidden">{cat.count} 篇</span>
-                         <Button 
-                            type="text" 
-                            danger 
-                            size="small" 
-                            icon={<DeleteOutlined />} 
-                            className="hidden group-hover:flex" 
-                            onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat.key); }}
-                         />
-                      </div>
-                   </div>
-                ))}
-             </div>
-           </div>
-
-           {/* 标签管理 */}
-           <div className="neo-card p-6">
-             <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-bold text-white">热门标签</h3>
-                <Button 
-                  type="text" 
-                  shape="circle" 
-                  icon={<PlusOutlined />} 
-                  className="bg-white/5 hover:bg-white/10 text-gray-400"
-                  onClick={() => setIsTagModalOpen(true)}
-                />
-             </div>
-             <div className="flex flex-wrap gap-2">
-                {tags.map(tag => (
-                   <Tag 
-                     key={tag.key} 
-                     color="default"
-                     closable
-                     onClose={(e) => { e.preventDefault(); handleDeleteTag(tag.key); }}
-                     className={`px-3 py-1.5 rounded-full border transition-all cursor-pointer text-sm m-0 flex items-center hover:opacity-80 ${getTagColorClass(tag.color)}`}
-                   >
-                     {tag.name}
-                   </Tag>
-                ))}
-                <Tag 
-                  className="px-3 py-1.5 rounded-full border-dashed border-gray-700 bg-transparent text-gray-500 hover:text-white hover:border-gray-500 cursor-pointer text-sm m-0"
-                  onClick={() => setIsTagModalOpen(true)}
-                >
-                  + Add
-                </Tag>
-             </div>
-           </div>
-           
-           {/* 快捷操作 */}
-           <div className="neo-card p-6 bg-gradient-to-br from-blue-600/20 to-purple-600/20 border-blue-500/20">
-              <h3 className="text-lg font-bold text-white mb-4">写点什么？</h3>
-              <p className="text-gray-400 text-sm mb-6">记录当下的想法，或者开始一篇新的技术长文。</p>
-              <div className="flex space-x-3">
-                 <Button 
-                   size="large" 
-                   icon={<FileTextOutlined />} 
-                   className="flex-1 bg-white/10 hover:bg-white/20 border-none text-white h-10 rounded-xl font-medium backdrop-blur-sm"
-                   onClick={() => navigate('/blogs/create')}
-                 >
-                    写文章
-                 </Button>
-                 <Button 
-                   size="large" 
-                   icon={<SnippetsOutlined />} 
-                   className="flex-1 bg-white/10 hover:bg-white/20 border-none text-white h-10 rounded-xl font-medium backdrop-blur-sm"
-                   onClick={() => navigate('/snippets/create')}
-                 >
-                    发碎片
-                 </Button>
+              <div>
+                <div className="text-gray-400 font-medium mb-1">博客总数</div>
+                <div className="text-4xl font-bold text-white mb-2">{stats.blogsCount}</div>
+                <div className="text-sm text-gray-500 flex items-center">
+                  <span className="text-green-500 mr-1 bg-green-500/10 px-1.5 py-0.5 rounded text-xs">+{stats.newBlogsCount || 0}</span>
+                  本月新增
+                </div>
               </div>
-           </div>
-        </Col>
-      </Row>
+              <div className="mt-4 flex items-center text-sm text-gray-500">
+                 <span className="text-green-500 flex items-center mr-2 bg-green-500/10 px-2 py-0.5 rounded-full">
+                   <ArrowRightOutlined className="rotate-[-45deg] mr-1 text-xs" /> 
+                   View
+                 </span>
+                 管理博客文章
+              </div>
+            </div>
+          </Col>
+          <Col span={12}>
+            <div 
+              className="neo-card p-6 h-full flex flex-col justify-between relative overflow-hidden group cursor-pointer"
+              onClick={() => navigate('/snippets')}
+            >
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <CoffeeOutlined style={{ fontSize: '80px', color: '#d97706' }} />
+              </div>
+              <div>
+                <div className="text-gray-400 font-medium mb-1">日常碎片</div>
+                <div className="text-4xl font-bold text-white mb-2">{stats.snippetsCount}</div>
+                <div className="text-sm text-gray-500 flex items-center">
+                   <span className="text-amber-500 mr-1 bg-amber-500/10 px-1.5 py-0.5 rounded text-xs">+{stats.newSnippetsCount || 0}</span>
+                   本月新增
+                </div>
+              </div>
+              <div className="mt-4 flex items-center text-sm text-gray-500">
+                 <span className="text-amber-600 flex items-center mr-2 bg-amber-500/10 px-2 py-0.5 rounded-full">
+                   <ArrowRightOutlined className="rotate-[-45deg] mr-1 text-xs" />
+                   View
+                 </span>
+                 记录生活点滴
+              </div>
+            </div>
+          </Col>
+        </Row>
 
-      {/* Modals */}
-      <Modal
-        title="添加分类"
-        open={isCategoryModalOpen}
-        onOk={handleAddCategory}
-        onCancel={() => setIsCategoryModalOpen(false)}
-        okText="确认"
-        cancelText="取消"
-        okButtonProps={{ 
-          disabled: !newCategoryName.trim(),
-          className: newCategoryName.trim() ? '!bg-blue-600 !text-white hover:!bg-blue-500' : ''
-        }}
-      >
-        <Input 
-          placeholder="请输入分类名称" 
-          value={newCategoryName} 
-          onChange={(e) => setNewCategoryName(e.target.value)} 
-          onPressEnter={handleAddCategory}
-        />
-      </Modal>
+        <Row gutter={[24, 24]}>
+          {/* 左侧主要内容 */}
+          <Col span={16} className="space-y-8">
+             {/* 文章概览 */}
+             <div className="neo-card p-6">
+               <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-bold text-white flex items-center">
+                     <span className="w-1 h-6 bg-blue-500 rounded-full mr-3"></span>
+                     最新文章
+                  </h3>
+                  <Button type="link" className="text-gray-400 hover:text-white" onClick={() => navigate('/blogs')}>查看全部 <ArrowRightOutlined /></Button>
+               </div>
+               <div className="space-y-4">
+                  {blogs.map((blog) => (
+                     <div key={blog.id} className="group flex items-center justify-between p-4 rounded-2xl hover:bg-white/5 transition-all cursor-pointer border border-transparent hover:border-white/5">
+                        <div className="flex items-center space-x-4">
+                           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center text-blue-400 font-bold text-lg group-hover:scale-110 transition-transform">
+                              {dayjs(blog.createdAt).format('DD')}
+                           </div>
+                           <div>
+                              <div className="text-white font-medium text-lg mb-1 group-hover:text-blue-400 transition-colors">{blog.title}</div>
+                              <div className="text-gray-500 text-sm flex items-center">
+                                 <span>{dayjs(blog.createdAt).format('YYYY-MM')}</span>
+                                 <span className="mx-2">·</span>
+                                 <span>{blog.views || 0} 阅读</span>
+                              </div>
+                           </div>
+                        </div>
+                        <ArrowRightOutlined className="text-gray-600 group-hover:text-white -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
+                     </div>
+                  ))}
+                  {blogs.length === 0 && (
+                    <div className="text-center text-gray-500 py-8">暂无文章</div>
+                  )}
+               </div>
+             </div>
 
-      <Modal
-        title="添加标签"
-        open={isTagModalOpen}
-        onOk={handleAddTag}
-        onCancel={() => setIsTagModalOpen(false)}
-        okText="确认"
-        cancelText="取消"
-        okButtonProps={{ 
-          disabled: !newTagName.trim(),
-          className: newTagName.trim() ? '!bg-blue-600 !text-white hover:!bg-blue-500' : ''
-        }}
-      >
-        <Input 
-          placeholder="请输入标签名称" 
-          value={newTagName} 
-          onChange={(e) => setNewTagName(e.target.value)} 
-          onPressEnter={handleAddTag}
-        />
-      </Modal>
+             {/* 词云 */}
+             <div className="neo-card p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-bold text-white flex items-center">
+                     <span className="w-1 h-6 bg-purple-500 rounded-full mr-3"></span>
+                     内容分布
+                  </h3>
+                </div>
+                <div className="h-[300px] flex items-center justify-center">
+                    {wordCloudData.length > 0 ? (
+                      <WordCloud {...config} />
+                    ) : (
+                      <div className="text-gray-500">暂无标签数据</div>
+                    )}
+                </div>
+             </div>
+          </Col>
+
+          {/* 右侧侧边栏 */}
+          <Col span={8} className="space-y-8">
+             {/* 分类管理 */}
+             <div className="neo-card p-6">
+               <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-bold text-white">分类</h3>
+                  <Button 
+                    type="text" 
+                    shape="circle" 
+                    icon={<PlusOutlined />} 
+                    className="bg-white/5 hover:bg-white/10 text-gray-400"
+                    onClick={() => {
+                      setEditingCategory(null);
+                      categoryForm.resetFields();
+                      setIsCategoryModalVisible(true);
+                    }}
+                  />
+               </div>
+               <div className="space-y-3">
+                  {categories.map(cat => (
+                     <div key={cat.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
+                        <div className="flex items-center space-x-3">
+                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${cat.color || 'bg-gray-500/10 text-gray-500'}`}>
+                              {cat.icon && iconMap[cat.icon] ? iconMap[cat.icon] : (cat.icon ? <i className={cat.icon} /> : <CloudOutlined />)}
+                           </div>
+                           <span className="text-gray-200 font-medium">{cat.name}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                           <span className="text-xs text-gray-500 bg-black/20 px-2 py-1 rounded-full group-hover:hidden">{cat.count || 0} 篇</span>
+                           <div className="hidden group-hover:flex items-center">
+                             <Button 
+                                type="text" 
+                                size="small" 
+                                icon={<EditOutlined />} 
+                                className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 mr-1" 
+                                onClick={(e) => { e.stopPropagation(); handleEditCategory(cat); }}
+                             />
+                             <Button 
+                                type="text" 
+                                danger 
+                                size="small" 
+                                icon={<DeleteOutlined />} 
+                                onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat.id); }}
+                             />
+                           </div>
+                        </div>
+                     </div>
+                  ))}
+                  {categories.length === 0 && (
+                    <div className="text-center text-gray-500 py-4">暂无分类</div>
+                  )}
+               </div>
+             </div>
+
+             {/* 标签管理 */}
+             <div className="neo-card p-6">
+               <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-bold text-white">热门标签</h3>
+                   <Button 
+                    type="text" 
+                    shape="circle" 
+                    icon={<PlusOutlined />} 
+                    className="bg-white/5 hover:bg-white/10 text-gray-400"
+                    onClick={() => {
+                      setEditingTag(null);
+                      tagForm.resetFields();
+                      setIsTagModalVisible(true);
+                    }}
+                  />
+               </div>
+               <div className="flex flex-wrap gap-2">
+                  {tags.map(tag => (
+                     <Tag 
+                        key={tag.id} 
+                        className={`!flex !flex-wrap px-3 py-1.5 rounded-lg border-0 text-sm cursor-pointer transition-all hover:scale-105 flex items-center group ${getTagColorClass(tag.color, tag.name)}`}
+                     >
+                        <span>{tag.name}</span>
+                        <span className="max-w-0 overflow-hidden group-hover:max-w-[60px] group-hover:ml-2 transition-all duration-300 ease-in-out opacity-0 group-hover:opacity-100 flex items-center whitespace-nowrap">
+                          <EditOutlined className="text-xs hover:text-blue-400 mr-2" onClick={(e) => { e.stopPropagation(); handleEditTag(tag); }} />
+                          <DeleteOutlined className="text-xs hover:text-red-400" onClick={(e) => { e.stopPropagation(); handleDeleteTag(tag.id); }} />
+                        </span>
+                     </Tag>
+                  ))}
+                  {tags.length === 0 && (
+                    <div className="text-center text-gray-500 w-full py-4">暂无标签</div>
+                  )}
+               </div>
+             </div>
+          </Col>
+        </Row>
+        </div>
+
+        {/* Add/Edit Category Modal */}
+        <Modal
+          title={editingCategory ? "编辑分类" : "添加分类"}
+          open={isCategoryModalVisible}
+          onCancel={() => {
+            setIsCategoryModalVisible(false);
+            setEditingCategory(null);
+            categoryForm.resetFields();
+          }}
+          footer={null}
+        >
+          <Form
+            form={categoryForm}
+            onFinish={handleCategorySubmit}
+            layout="vertical"
+          >
+            <Form.Item
+              name="name"
+              label="分类名称"
+              rules={[{ required: true, message: '请输入分类名称' }]}
+            >
+              <Input placeholder="例如：技术分享" />
+            </Form.Item>
+            <Form.Item
+              name="icon"
+              label="图标"
+              tooltip="支持选择预设图标，或输入自定义 CSS Class (如: ri-home-line)"
+            >
+              <AutoComplete
+                placeholder="选择或输入图标 Class"
+                allowClear
+                filterOption={(inputValue, option) => {
+                  const opt = iconOptions.find(o => o.value === option?.value);
+                  const searchStr = opt ? `${opt.value} ${opt.label}` : option?.value || '';
+                  return searchStr.toUpperCase().includes(inputValue.toUpperCase());
+                }}
+                options={iconOptions.map(opt => ({
+                  value: opt.value,
+                  label: (
+                    <Space>
+                      {opt.icon}
+                      {opt.label}
+                    </Space>
+                  )
+                }))}
+              />
+            </Form.Item>
+            <Form.Item
+              name="color"
+              label="颜色主题"
+              tooltip="支持选择预设颜色，或输入自定义 Tailwind Class"
+            >
+              <AutoComplete
+                placeholder="选择或输入 Tailwind Class"
+                allowClear
+                filterOption={(inputValue, option) => {
+                  const opt = colorOptions.find(o => o.value === option?.value);
+                  const searchStr = opt ? `${opt.value} ${opt.label}` : option?.value || '';
+                  return searchStr.toUpperCase().includes(inputValue.toUpperCase());
+                }}
+                options={colorOptions.map(opt => ({
+                  value: opt.value,
+                  label: (
+                    <Space>
+                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: opt.color }} />
+                      {opt.label}
+                    </Space>
+                  )
+                }))}
+              />
+            </Form.Item>
+            <Form.Item className="mb-0 text-right">
+              <Button onClick={() => {
+                setIsCategoryModalVisible(false);
+                setEditingCategory(null);
+                categoryForm.resetFields();
+              }} className="mr-2">取消</Button>
+              <Button type="primary" htmlType="submit">确定</Button>
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        {/* Add/Edit Tag Modal */}
+        <Modal
+          title={editingTag ? "编辑标签" : "添加标签"}
+          open={isTagModalVisible}
+          onCancel={() => {
+            setIsTagModalVisible(false);
+            setEditingTag(null);
+            tagForm.resetFields();
+          }}
+          footer={null}
+        >
+          <Form
+            form={tagForm}
+            onFinish={handleTagSubmit}
+            layout="vertical"
+          >
+            <Form.Item
+              name="name"
+              label="标签名称"
+              rules={[{ required: true, message: '请输入标签名称' }]}
+            >
+              <Input placeholder="例如：React" />
+            </Form.Item>
+            <Form.Item
+              name="color"
+              label="颜色"
+            >
+               <Input placeholder="例如：blue, red, green..." />
+            </Form.Item>
+            <Form.Item className="mb-0 text-right">
+               <Button onClick={() => {
+                 setIsTagModalVisible(false);
+                 setEditingTag(null);
+                 tagForm.resetFields();
+               }} className="mr-2">取消</Button>
+               <Button type="primary" htmlType="submit">确定</Button>
+            </Form.Item>
+          </Form>
+        </Modal>
+      </Spin>
     </div>
   );
 };

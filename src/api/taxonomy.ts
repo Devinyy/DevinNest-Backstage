@@ -35,6 +35,10 @@ export const createCategory = (data: CreateCategoryParams) => {
   return request.post<Category>('/v1/backstage/categories', data);
 };
 
+export const updateCategory = (id: string, data: CreateCategoryParams) => {
+  return request.put<Category>(`/v1/backstage/categories/${id}`, data);
+};
+
 export const deleteCategory = (id: string) => {
   return request.delete<void>(`/v1/backstage/categories/${id}`);
 };
@@ -46,6 +50,10 @@ export const getTags = () => {
 
 export const createTag = (data: CreateTagParams) => {
   return request.post<Tag>('/v1/backstage/tags', data);
+};
+
+export const updateTag = (id: string, data: CreateTagParams) => {
+  return request.put<Tag>(`/v1/backstage/tags/${id}`, data);
 };
 
 export const deleteTag = (id: string) => {

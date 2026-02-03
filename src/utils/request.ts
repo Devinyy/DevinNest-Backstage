@@ -71,12 +71,19 @@ export const alovaInstance = createAlova({
   baseURL, 
   requestAdapter: adapterFetch(), 
   timeout: 10000, 
+  cacheFor: null, // 全局禁用缓存，确保后台管理系统数据实时性
 
   beforeRequest(method) { 
     // 默认 Header 
     if (!method.config.headers['Content-Type']) { 
       method.config.headers['Content-Type'] = 'application/json'; 
     } 
+    
+    // 禁用缓存 Header
+    method.config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+    method.config.headers['Pragma'] = 'no-cache';
+    method.config.headers['Expires'] = '0';
+
     // 可以在这里注入 Token 等通用 Header 
     // 登录接口无需 Token
     if (!method.url.includes('/auth/login')) {

@@ -5,6 +5,8 @@ export interface DashboardStats {
   snippetsCount: number;
   categoriesCount: number;
   tagsCount: number;
+  newBlogsCount?: number;
+  newSnippetsCount?: number;
   latestActivity: any;
 }
 

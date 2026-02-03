@@ -1,4 +1,4 @@
-# DevinNest AI Backend
+# Devin's Nest API 接口文档
 
 本文档描述了 Devin's Nest 后台管理系统所需的后端 API 接口。
 
@@ -19,472 +19,220 @@ interface ApiResponse<T> {
 
 ## 2. 认证模块 (Auth)
 
-### 2.1 Login
-- **URL**: `/api/v1/backstage/auth/login`
+### 2.1 用户登录
+- **URL**: `/auth/login`
 - **Method**: `POST`
-- **描述**: User login endpoint.
+- **描述**: 用户名密码登录，获取 Token。
 - **请求参数**:
   ```json
-{
-  "username": "string",
-  "password": "string"
-}
+  {
+    "username": "admin",
+    "password": "Base64(RSA_Encrypt(password))" // 使用 RSA 公钥加密后的 Base64 字符串
+  }
   ```
 - **响应数据**:
   ```json
-{
-  "token": "string",
-  "userInfo": "..."
-}
+  {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "userInfo": {
+      "id": "1",
+      "username": "admin",
+      "avatar": "https://example.com/avatar.jpg"
+    }
+  }
   ```
 
-### 2.2 Get Current User Info
-- **URL**: `/api/v1/backstage/auth/me`
+### 2.2 获取当前用户信息
+- **URL**: `/auth/me`
 - **Method**: `GET`
-- **描述**: Get current user info (Mocked implementation for simplicity).
-In a real app, you would decode the token to get the user ID.
-- **响应数据**:
-  ```json
-{
-  "id": "string",
-  "username": "string",
-  "avatar": "string"
-}
-  ```
+- **描述**: 校验 Token 有效性并获取用户信息。
 
-### 2.3 Logout
-- **URL**: `/api/v1/backstage/auth/logout`
+### 2.3 退出登录
+- **URL**: `/auth/logout`
 - **Method**: `POST`
-- **描述**: Logout (Client side clears token).
-- **响应数据**:
 
 ## 3. 仪表盘 (Dashboard)
 
-### 3.1 Get Dashboard Stats
-- **URL**: `/api/v1/backstage/dashboard/stats`
+### 3.1 获取统计数据
+- **URL**: `/dashboard/stats`
 - **Method**: `GET`
-- **描述**: Get dashboard statistics.
+- **描述**: 获取首页所需的各项统计指标。
 - **响应数据**:
   ```json
-{
-  "blogsCount": 0,
-  "snippetsCount": 0,
-  "categoriesCount": 0,
-  "tagsCount": 0,
-  "latestActivity": "any"
-}
+  {
+    "blogsCount": 120,
+    "snippetsCount": 350,
+    "categoriesCount": 8,
+    "tagsCount": 24,
+    "blogsNewThisMonth": 5,
+    "snippetsNewThisMonth": 12,
+    "latestActivity": [ ... ] // 可选，最新的动态
+  }
   ```
 
 ## 4. 博客管理 (Blogs)
 
-### 4.1 Get Blogs
-- **URL**: `/api/v1/backstage/blogs`
+### 4.1 获取博客列表
+- **URL**: `/blogs`
 - **Method**: `GET`
-- **描述**: Get blog list with pagination and filters.
 - **Query 参数**:
-  - `page`: - 
-  - `pageSize`: - 
-  - `status`: - 
-  - `keyword`: - 
-  - `categoryId`: - 
+  - `page`: 页码 (默认 1)
+  - `pageSize`: 每页数量 (默认 10)
+  - `status`: 状态 (draft/published)
+  - `keyword`: 搜索关键词 (标题/内容)
+  - `categoryId`: 分类筛选
 - **响应数据**:
   ```json
-{
-  "list": [
-    "..."
-  ],
-  "total": 0
-}
+  {
+    "list": [
+      {
+        "id": "1",
+        "title": "React 19 新特性解析",
+        "subtitle": "探索前端开发的未来",
+        "cover": "https://example.com/cover.jpg",
+        "category": { "id": "1", "name": "技术" },
+        "tags": [{ "id": "1", "name": "React" }],
+        "views": 1024,
+        "status": "published",
+        "createdAt": "2023-10-01T12:00:00Z"
+      }
+    ],
+    "total": 100
+  }
   ```
 
-### 4.2 Create Blog
-- **URL**: `/api/v1/backstage/blogs`
-- **Method**: `POST`
-- **描述**: Create a new blog.
-- **请求参数**:
-  ```json
-{
-  "title": "string",
-  "subtitle": "any",
-  "cover": "any",
-  "categoryId": "string",
-  "tagIds": [
-    "..."
-  ],
-  "status": "string",
-  "content": "string"
-}
-  ```
-- **响应数据**:
-  ```json
-{
-  "title": "string",
-  "subtitle": "any",
-  "cover": "any",
-  "categoryId": "string",
-  "tagIds": [
-    "..."
-  ],
-  "status": "string",
-  "id": "string",
-  "content": "any",
-  "views": 0,
-  "createdAt": "string",
-  "category": "any",
-  "tags": [
-    "..."
-  ]
-}
-  ```
-
-### 4.3 Get Blog Detail
-- **URL**: `/api/v1/backstage/blogs/{id}`
+### 4.2 获取博客详情
+- **URL**: `/blogs/:id`
 - **Method**: `GET`
-- **描述**: Get blog detail.
-- **响应数据**:
-  ```json
-{
-  "title": "string",
-  "subtitle": "any",
-  "cover": "any",
-  "categoryId": "string",
-  "tagIds": [
-    "..."
-  ],
-  "status": "string",
-  "id": "string",
-  "content": "any",
-  "views": 0,
-  "createdAt": "string",
-  "category": "any",
-  "tags": [
-    "..."
-  ]
-}
-  ```
+- **响应数据**: (包含 Markdown 内容)
 
-### 4.4 Update Blog
-- **URL**: `/api/v1/backstage/blogs/{id}`
-- **Method**: `PUT`
-- **描述**: Update blog.
+### 4.3 创建博客
+- **URL**: `/blogs`
+- **Method**: `POST`
 - **请求参数**:
   ```json
-{
-  "title": "string",
-  "subtitle": "any",
-  "cover": "any",
-  "categoryId": "string",
-  "tagIds": [
-    "..."
-  ],
-  "status": "string",
-  "content": "any"
-}
-  ```
-- **响应数据**:
-  ```json
-{
-  "title": "string",
-  "subtitle": "any",
-  "cover": "any",
-  "categoryId": "string",
-  "tagIds": [
-    "..."
-  ],
-  "status": "string",
-  "id": "string",
-  "content": "any",
-  "views": 0,
-  "createdAt": "string",
-  "category": "any",
-  "tags": [
-    "..."
-  ]
-}
+  {
+    "title": "文章标题",
+    "subtitle": "副标题",
+    "content": "# Markdown 内容...",
+    "cover": "https://...",
+    "categoryId": "1",
+    "tagIds": ["1", "2"],
+    "status": "published" // 或 'draft'
+  }
   ```
 
-### 4.5 Delete Blog
-- **URL**: `/api/v1/backstage/blogs/{id}`
+### 4.4 更新博客
+- **URL**: `/blogs/:id`
+- **Method**: `PUT`
+
+### 4.5 删除博客
+- **URL**: `/blogs/:id`
 - **Method**: `DELETE`
-- **描述**: Delete blog.
-- **响应数据**:
 
 ## 5. 碎片管理 (Snippets)
 
-### 5.1 Get Snippets
-- **URL**: `/api/v1/backstage/snippets`
+### 5.1 获取碎片列表
+- **URL**: `/snippets`
 - **Method**: `GET`
-- **Query 参数**:
-  - `page`: - 
-  - `pageSize`: - 
-- **响应数据**:
-  ```json
-[
-  {
-    "content": "...",
-    "metadata": "...",
-    "tags": "...",
-    "id": "..."
-  }
-]
-  ```
+- **Query 参数**: `page`, `pageSize`, `startDate`, `endDate`
 
-### 5.2 Create Snippet
-- **URL**: `/api/v1/backstage/snippets`
+### 5.2 获取碎片详情
+- **URL**: `/snippets/:id`
+- **Method**: `GET`
+
+### 5.3 创建碎片
+- **URL**: `/snippets`
 - **Method**: `POST`
+- **描述**: 碎片采用结构化 Block 存储。
 - **请求参数**:
   ```json
-{
-  "content": [
-    "..."
-  ],
-  "metadata": "...",
-  "tags": [
-    "..."
-  ]
-}
-  ```
-- **响应数据**:
-  ```json
-{
-  "content": [
-    "..."
-  ],
-  "metadata": "...",
-  "tags": [
-    "..."
-  ],
-  "id": "string"
-}
-  ```
-
-### 5.3 Get Snippet Detail
-- **URL**: `/api/v1/backstage/snippets/{id}`
-- **Method**: `GET`
-- **响应数据**:
-  ```json
-{
-  "content": [
-    "..."
-  ],
-  "metadata": "...",
-  "tags": [
-    "..."
-  ],
-  "id": "string"
-}
+  {
+    "content": [ // Block 数组
+      {
+        "type": "text",
+        "content": "今天天气真不错，去公园散步了。"
+      },
+      {
+        "type": "image",
+        "src": "https://...",
+        "caption": "公园的一角"
+      },
+      {
+        "type": "quote",
+        "content": "Stay hungry, stay foolish.",
+        "author": "Steve Jobs"
+      }
+    ],
+    "metadata": {
+      "weather": "Sunny",
+      "mood": "Happy",
+      "location": "Central Park",
+      "date": "2023-10-05T10:00:00Z"
+    },
+    "tags": ["life", "daily"]
+  }
   ```
 
-### 5.4 Update Snippet
-- **URL**: `/api/v1/backstage/snippets/{id}`
+### 5.4 更新碎片
+- **URL**: `/snippets/:id`
 - **Method**: `PUT`
-- **请求参数**:
-  ```json
-{
-  "content": [
-    "..."
-  ],
-  "metadata": "...",
-  "tags": [
-    "..."
-  ]
-}
-  ```
-- **响应数据**:
-  ```json
-{
-  "content": [
-    "..."
-  ],
-  "metadata": "...",
-  "tags": [
-    "..."
-  ],
-  "id": "string"
-}
-  ```
 
-### 5.5 Delete Snippet
-- **URL**: `/api/v1/backstage/snippets/{id}`
+### 5.5 删除碎片
+- **URL**: `/snippets/:id`
 - **Method**: `DELETE`
-- **响应数据**:
 
 ## 6. 分类与标签 (Taxonomy)
 
-### 6.1 Get Categories
-- **URL**: `/api/v1/backstage/categories`
+### 6.1 获取所有分类
+- **URL**: `/categories`
 - **Method**: `GET`
-- **响应数据**:
-  ```json
-[
-  {
-    "name": "...",
-    "icon": "...",
-    "color": "...",
-    "id": "...",
-    "count": "..."
-  }
-]
-  ```
+- **响应数据**: `[{ "id": "1", "name": "技术", "count": 10, "icon": "CodeOutlined", "color": "blue" }]`
 
-### 6.2 Create Category
-- **URL**: `/api/v1/backstage/categories`
+### 6.2 创建分类
+- **URL**: `/categories`
 - **Method**: `POST`
-- **请求参数**:
-  ```json
-{
-  "name": "string",
-  "icon": "any",
-  "color": "any"
-}
-  ```
-- **响应数据**:
-  ```json
-{
-  "name": "string",
-  "icon": "any",
-  "color": "any",
-  "id": "string",
-  "count": 0
-}
-  ```
+- **请求参数**: `{ "name": "新分类", "icon": "...", "color": "..." }`
 
-### 6.3 Delete Category
-- **URL**: `/api/v1/backstage/categories/{id}`
+### 6.3 更新分类
+- **URL**: `/categories/:id`
+- **Method**: `PUT`
+- **请求参数**: `{ "name": "更新分类", "icon": "...", "color": "..." }`
+
+### 6.4 删除分类
+- **URL**: `/categories/:id`
 - **Method**: `DELETE`
-- **响应数据**:
 
-### 6.4 Get Tags
-- **URL**: `/api/v1/backstage/tags`
+### 6.5 获取所有标签
+- **URL**: `/tags`
 - **Method**: `GET`
-- **响应数据**:
-  ```json
-[
-  {
-    "name": "...",
-    "color": "...",
-    "id": "...",
-    "count": "..."
-  }
-]
-  ```
+- **响应数据**: `[{ "id": "1", "name": "React", "count": 5, "color": "cyan" }]`
 
-### 6.5 Create Tag
-- **URL**: `/api/v1/backstage/tags`
+### 6.6 创建标签
+- **URL**: `/tags`
 - **Method**: `POST`
-- **请求参数**:
-  ```json
-{
-  "name": "string",
-  "color": "any"
-}
-  ```
-- **响应数据**:
-  ```json
-{
-  "name": "string",
-  "color": "any",
-  "id": "string",
-  "count": 0
-}
-  ```
+- **请求参数**: `{ "name": "新标签", "color": "cyan" }`
 
-### 6.6 Delete Tag
-- **URL**: `/api/v1/backstage/tags/{id}`
+### 6.7 更新标签
+- **URL**: `/tags/:id`
+- **Method**: `PUT`
+- **请求参数**: `{ "name": "更新标签", "color": "blue" }`
+
+### 6.8 删除标签
+- **URL**: `/tags/:id`
 - **Method**: `DELETE`
-- **响应数据**:
 
 ## 7. 通用接口 (Common)
 
-### 7.1 Upload File
-- **URL**: `/api/v1/backstage/upload`
+### 7.1 文件上传
+- **URL**: `/upload`
 - **Method**: `POST`
-- **描述**: Upload file to local storage.
-- **请求参数**:
+- **Content-Type**: `multipart/form-data`
+- **请求参数**: `file` (Binary)
 - **响应数据**:
   ```json
-{
-  "url": "string",
-  "filename": "string"
-}
-  ```
-
-## 8. AI 服务 (LLM)
-
-### 8.1 Chat Completion
-- **URL**: `/api/v1/ai/chat`
-- **Method**: `POST`
-- **描述**: Generate a chat completion using the configured LLM.
-- **请求参数**:
-  ```json
-{
-  "messages": [
-    "..."
-  ],
-  "model": "string",
-  "temperature": 0.0
-}
-  ```
-- **响应数据**:
-  ```json
-{
-  "id": "string",
-  "choices": [
-    "..."
-  ],
-  "created": 0,
-  "model": "string"
-}
-  ```
-
-## 9. DevinNest 项目 (Projects)
-
-### 9.1 Read Projects
-- **URL**: `/api/v1/nest/projects/`
-- **Method**: `GET`
-- **描述**: Retrieve projects for the current user (DevinNest Web).
-- **Query 参数**:
-  - `skip`: - 
-  - `limit`: - 
-- **响应数据**:
-  ```json
-[
   {
-    "id": "...",
-    "name": "...",
-    "description": "...",
-    "owner": "..."
+    "url": "https://your-oss-bucket.com/path/to/image.jpg",
+    "filename": "image.jpg"
   }
-]
   ```
-
-### 9.2 Create Project
-- **URL**: `/api/v1/nest/projects/`
-- **Method**: `POST`
-- **描述**: Create a new project.
-- **请求参数**:
-  ```json
-{
-  "id": 0,
-  "name": "string",
-  "description": "string",
-  "owner": "string"
-}
-  ```
-- **响应数据**:
-  ```json
-{
-  "id": 0,
-  "name": "string",
-  "description": "string",
-  "owner": "string"
-}
-  ```
-
-## 10. Other
-
-### 10.1 Root
-- **URL**: `/`
-- **Method**: `GET`
-- **响应数据**:
-
