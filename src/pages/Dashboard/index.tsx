@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Row, Col, Button, Tag, message, Modal, Form, Input, Spin, Select, Space, AutoComplete } from 'antd';
+import { Row, Col, Button, Tag, message, Modal, Form, Input, Spin, Space, AutoComplete } from 'antd';
 import { 
   FileTextOutlined, 
   PlusOutlined, 
@@ -18,7 +18,6 @@ import {
 } from '@ant-design/icons';
 import { WordCloud } from '@ant-design/plots';
 import { getDashboardStats, type DashboardStats } from '../../api/dashboard';
-import { getBlogs, type Blog } from '../../api/blogs';
 import { 
   getCategories, 
   getTags, 
@@ -69,6 +68,23 @@ const Dashboard: React.FC = () => {
     { label: '默认', value: 'bg-gray-500/10 text-gray-500', color: '#6b7280' },
   ];
 
+  // 自动映射标签名称到颜色
+  const autoColorMap: Record<string, string> = {
+    'JavaScript': 'gold',
+    'TypeScript': 'blue',
+    'Node.js': 'green',
+    'React': 'cyan',
+    'Vue': 'lime',
+    'CSS': 'purple',
+    'Python': 'blue',
+    'Webpack': 'cyan',
+    'AI': 'magenta',
+    '算法': 'purple',
+    '美食': 'orange',
+    '休闲娱乐': 'lime',
+    '游戏': 'cyan'
+  };
+
   const [stats, setStats] = useState<DashboardStats>({
     blogsCount: 0,
     snippetsCount: 0,
@@ -76,7 +92,6 @@ const Dashboard: React.FC = () => {
     tagsCount: 0,
     latestActivity: []
   });
-  const [blogs, setBlogs] = useState<Blog[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<TagInterface[]>([]);
   const [loading, setLoading] = useState(false);
@@ -93,15 +108,13 @@ const Dashboard: React.FC = () => {
   const fetchData = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const [statsRes, blogsRes, categoriesRes, tagsRes] = await Promise.all([
+      const [statsRes, categoriesRes, tagsRes] = await Promise.all([
         getDashboardStats(),
-        getBlogs({ page: 1, pageSize: 5 }),
         getCategories(),
         getTags()
       ]);
       
       setStats(statsRes);
-      setBlogs(blogsRes.list);
       setCategories(categoriesRes);
       setTags(tagsRes);
     } catch (error) {
@@ -131,23 +144,6 @@ const Dashboard: React.FC = () => {
   };
   
   const getTagColorClass = (colorName?: string, tagName?: string) => {
-    // 自动映射标签名称到颜色
-    const autoColorMap: Record<string, string> = {
-      'JavaScript': 'gold',
-      'TypeScript': 'blue',
-      'Node.js': 'green',
-      'React': 'cyan',
-      'Vue': 'lime',
-      'CSS': 'purple',
-      'Python': 'blue',
-      'Webpack': 'cyan',
-      'AI': 'magenta',
-      '算法': 'purple',
-      '美食': 'orange',
-      '休闲娱乐': 'lime',
-      '游戏': 'cyan'
-    };
- 
     const finalColorName = (() => {
       if (colorName) return colorName;
       
@@ -202,6 +198,11 @@ const Dashboard: React.FC = () => {
 
   const handleTagSubmit = async (values: CreateTagParams) => {
     try {
+      // 如果未选择颜色且在自动映射表中存在，则自动填充颜色
+      if (!values.color && autoColorMap[values.name]) {
+        values.color = autoColorMap[values.name];
+      }
+
       if (editingTag) {
         await updateTag(editingTag.id, values);
         message.success('标签更新成功');
@@ -324,36 +325,54 @@ const Dashboard: React.FC = () => {
         <Row gutter={[24, 24]}>
           {/* 左侧主要内容 */}
           <Col span={16} className="space-y-8">
-             {/* 文章概览 */}
+             {/* 最新动态 */}
              <div className="neo-card p-6">
                <div className="flex justify-between items-center mb-6">
                   <h3 className="text-lg font-bold text-white flex items-center">
                      <span className="w-1 h-6 bg-blue-500 rounded-full mr-3"></span>
-                     最新文章
+                     最新动态
                   </h3>
-                  <Button type="link" className="text-gray-400 hover:text-white" onClick={() => navigate('/blogs')}>查看全部 <ArrowRightOutlined /></Button>
                </div>
                <div className="space-y-4">
-                  {blogs.map((blog) => (
-                     <div key={blog.id} className="group flex items-center justify-between p-4 rounded-2xl hover:bg-white/5 transition-all cursor-pointer border border-transparent hover:border-white/5">
+                  {stats.latestActivity?.map((item) => (
+                     <div 
+                       key={`${item.type}-${item.id}`} 
+                       className="group flex items-center justify-between p-4 rounded-2xl hover:bg-white/5 transition-all cursor-pointer border border-transparent hover:border-white/5"
+                       onClick={() => navigate(item.type === 'blog' ? `/blogs/edit/${item.id}` : '/snippets')}
+                     >
                         <div className="flex items-center space-x-4">
-                           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center text-blue-400 font-bold text-lg group-hover:scale-110 transition-transform">
-                              {dayjs(blog.createdAt).format('DD')}
+                           <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform ${
+                             item.type === 'blog' 
+                               ? 'bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-blue-400' 
+                               : 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 text-amber-400'
+                           }`}>
+                              {dayjs(item.createdAt).format('DD')}
                            </div>
                            <div>
-                              <div className="text-white font-medium text-lg mb-1 group-hover:text-blue-400 transition-colors">{blog.title}</div>
+                              <div className={`font-medium text-lg mb-1 transition-colors flex items-center ${
+                                item.type === 'blog' ? 'text-white group-hover:text-blue-400' : 'text-white group-hover:text-amber-400'
+                              }`}>
+                                {item.title}
+                                <span className={`ml-2 text-xs px-1.5 py-0.5 rounded border ${
+                                  item.type === 'blog' 
+                                    ? 'border-blue-500/30 text-blue-400 bg-blue-500/10' 
+                                    : 'border-amber-500/30 text-amber-400 bg-amber-500/10'
+                                }`}>
+                                  {item.type === 'blog' ? 'blog' : 'snippet'}
+                                </span>
+                              </div>
                               <div className="text-gray-500 text-sm flex items-center">
-                                 <span>{dayjs(blog.createdAt).format('YYYY-MM')}</span>
+                                 <span>{dayjs(item.createdAt).format('YYYY-MM')}</span>
                                  <span className="mx-2">·</span>
-                                 <span>{blog.views || 0} 阅读</span>
+                                 <span>{dayjs(item.createdAt).format('HH:mm')}</span>
                               </div>
                            </div>
                         </div>
                         <ArrowRightOutlined className="text-gray-600 group-hover:text-white -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
                      </div>
                   ))}
-                  {blogs.length === 0 && (
-                    <div className="text-center text-gray-500 py-8">暂无文章</div>
+                  {(!stats.latestActivity || stats.latestActivity.length === 0) && (
+                    <div className="text-center text-gray-500 py-8">暂无动态</div>
                   )}
                </div>
              </div>
