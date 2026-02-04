@@ -489,7 +489,13 @@ const CreateBlog: React.FC = () => {
                     showPreviewIcon: false
                   }}
                 >
-                  {fileList.length < 1 && (
+                  {fileList.length >= 1 && fileList[0].url ? (
+                    <img 
+                      src={fileList[0].url} 
+                      alt="cover" 
+                      className="max-h-[200px] w-full object-contain"
+                    />
+                  ) : (
                     <>
                       <p className="ant-upload-drag-icon">
                         <UploadOutlined className="text-gray-500" />

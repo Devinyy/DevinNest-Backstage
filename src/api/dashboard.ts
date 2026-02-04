@@ -5,6 +5,9 @@ export interface ActivityItem {
   title: string;
   type: 'blog' | 'snippet';
   createdAt: string;
+  cover?: string;
+  category?: { id: string; name: string; color?: string };
+  tags?: { id: string; name: string; color?: string }[];
 }
 
 export interface DashboardStats {
@@ -12,8 +15,8 @@ export interface DashboardStats {
   snippetsCount: number;
   categoriesCount: number;
   tagsCount: number;
-  newBlogsCount?: number;
-  newSnippetsCount?: number;
+  blogsNewThisMonth?: number;
+  snippetsNewThisMonth?: number;
   latestActivity: ActivityItem[];
 }
 

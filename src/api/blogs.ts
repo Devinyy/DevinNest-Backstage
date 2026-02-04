@@ -1,4 +1,17 @@
 import { request } from '../utils/request';
+export { uploadFile } from './common';
+
+export interface BlogCategory {
+  id: string;
+  name: string;
+  color?: string;
+}
+
+export interface BlogTag {
+  id: string;
+  name: string;
+  color?: string;
+}
 
 export interface Blog {
   id: string;
@@ -11,8 +24,8 @@ export interface Blog {
   content: string;
   views: number;
   createdAt: string;
-  category?: any;
-  tags?: any[];
+  category?: BlogCategory;
+  tags?: BlogTag[];
 }
 
 export interface CreateBlogParams {
@@ -62,8 +75,3 @@ export const deleteBlog = (id: string) => {
   return request.post<void>('/v1/backstage/blogs/delete', { id });
 };
 
-export const uploadFile = (file: File) => {
-  const formData = new FormData();
-  formData.append('file', file);
-  return request.post<{ url: string }>('/v1/backstage/upload', formData);
-};

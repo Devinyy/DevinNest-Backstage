@@ -282,7 +282,7 @@ const Dashboard: React.FC = () => {
                 <div className="text-gray-400 font-medium mb-1">博客总数</div>
                 <div className="text-4xl font-bold text-white mb-2">{stats.blogsCount}</div>
                 <div className="text-sm text-gray-500 flex items-center">
-                  <span className="text-green-500 mr-1 bg-green-500/10 px-1.5 py-0.5 rounded text-xs">+{stats.newBlogsCount || 0}</span>
+                  <span className="text-green-500 mr-1 bg-green-500/10 px-1.5 py-0.5 rounded text-xs">+{stats.blogsNewThisMonth || 0}</span>
                   本月新增
                 </div>
               </div>
@@ -307,7 +307,7 @@ const Dashboard: React.FC = () => {
                 <div className="text-gray-400 font-medium mb-1">日常碎片</div>
                 <div className="text-4xl font-bold text-white mb-2">{stats.snippetsCount}</div>
                 <div className="text-sm text-gray-500 flex items-center">
-                   <span className="text-amber-500 mr-1 bg-amber-500/10 px-1.5 py-0.5 rounded text-xs">+{stats.newSnippetsCount || 0}</span>
+                   <span className="text-amber-500 mr-1 bg-amber-500/10 px-1.5 py-0.5 rounded text-xs">+{stats.snippetsNewThisMonth || 0}</span>
                    本月新增
                 </div>
               </div>
@@ -340,34 +340,66 @@ const Dashboard: React.FC = () => {
                        className="group flex items-center justify-between p-4 rounded-2xl hover:bg-white/5 transition-all cursor-pointer border border-transparent hover:border-white/5"
                        onClick={() => navigate(item.type === 'blog' ? `/blogs/edit/${item.id}` : '/snippets')}
                      >
-                        <div className="flex items-center space-x-4">
-                           <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform ${
-                             item.type === 'blog' 
-                               ? 'bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-blue-400' 
-                               : 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 text-amber-400'
-                           }`}>
-                              {dayjs(item.createdAt).format('DD')}
-                           </div>
-                           <div>
-                              <div className={`font-medium text-lg mb-1 transition-colors flex items-center ${
-                                item.type === 'blog' ? 'text-white group-hover:text-blue-400' : 'text-white group-hover:text-amber-400'
+                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                              <div className={`w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform overflow-hidden ${
+                                item.cover 
+                                  ? 'bg-transparent'
+                                  : item.type === 'blog' 
+                                    ? 'bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-blue-400' 
+                                    : 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 text-amber-400'
                               }`}>
-                                {item.title}
-                                <span className={`ml-2 text-xs px-1.5 py-0.5 rounded border ${
-                                  item.type === 'blog' 
-                                    ? 'border-blue-500/30 text-blue-400 bg-blue-500/10' 
-                                    : 'border-amber-500/30 text-amber-400 bg-amber-500/10'
-                                }`}>
-                                  {item.type === 'blog' ? 'blog' : 'snippet'}
-                                </span>
+                                 {item.cover ? (
+                                   <img src={item.cover} alt={item.title} className="w-full h-full object-cover" />
+                                 ) : (
+                                   item.type === 'blog' ? <FileTextOutlined /> : <CoffeeOutlined />
+                                 )}
                               </div>
-                              <div className="text-gray-500 text-sm flex items-center">
-                                 <span>{dayjs(item.createdAt).format('YYYY-MM')}</span>
-                                 <span className="mx-2">·</span>
-                                 <span>{dayjs(item.createdAt).format('HH:mm')}</span>
+                              <div className="flex-1 min-w-0">
+                                 <div className="flex items-center gap-3 mb-1">
+                                   <h4 className={`text-base font-bold truncate transition-colors ${
+                                     item.type === 'blog' ? 'text-gray-100 group-hover:text-blue-400' : 'text-gray-100 group-hover:text-amber-400'
+                                   }`} title={item.title}>
+                                     {item.title}
+                                   </h4>
+                                   <span className={`px-2 py-0.5 text-xs font-medium rounded border ${
+                                     item.type === 'blog' 
+                                       ? 'border-blue-500/30 text-blue-400 bg-blue-500/10' 
+                                       : 'border-amber-500/30 text-amber-400 bg-amber-500/10'
+                                   }`}>
+                                     {item.type === 'blog' ? 'blog' : 'snippet'}
+                                   </span>
+                                 </div>
+                                 
+                                 <div className="flex items-center text-xs text-gray-500 gap-2">
+                                    {/* 分类 */}
+                                    {item.category && (
+                                      <span className="px-2 py-0.5 rounded border border-gray-700/50 bg-gray-800 text-gray-300">
+                                        {item.category.name}
+                                      </span>
+                                    )}
+                                    
+                                    {/* 标签 */}
+                                    {item.tags && item.tags.length > 0 && (
+                                      <div className="flex items-center gap-2">
+                                        {item.tags.map(tag => (
+                                          <span key={tag.id} className="hover:text-gray-300 transition-colors cursor-pointer">
+                                            #{tag.name}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    {/* 分隔符 & 时间 */}
+                                    {(item.category || (item.tags && item.tags.length > 0)) && (
+                                       <span className="text-gray-600">·</span>
+                                    )}
+                                    
+                                    <span className="font-mono">
+                                       {dayjs(item.createdAt).format('YYYY-MM-DD HH:mm')}
+                                    </span>
+                                 </div>
                               </div>
                            </div>
-                        </div>
                         <ArrowRightOutlined className="text-gray-600 group-hover:text-white -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
                      </div>
                   ))}
