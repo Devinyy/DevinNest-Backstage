@@ -71,6 +71,7 @@ const App: React.FC = () => {
             <Route index element={<Dashboard />} />
             <Route path="blogs" element={<Blogs />} />
             <Route path="blogs/create" element={<CreateBlog />} />
+            <Route path="blogs/edit/:id" element={<CreateBlog />} />
             <Route path="snippets" element={<Snippets />} />
             <Route path="snippets/create" element={<CreateSnippet />} />
           </Route>

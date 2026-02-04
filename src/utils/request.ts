@@ -75,7 +75,7 @@ export const alovaInstance = createAlova({
 
   beforeRequest(method) { 
     // 默认 Header 
-    if (!method.config.headers['Content-Type']) { 
+    if (!method.config.headers['Content-Type'] && !(method.data instanceof FormData)) { 
       method.config.headers['Content-Type'] = 'application/json'; 
     } 
     

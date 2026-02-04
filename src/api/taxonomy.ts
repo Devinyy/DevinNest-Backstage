@@ -32,15 +32,15 @@ export const getCategories = () => {
 };
 
 export const createCategory = (data: CreateCategoryParams) => {
-  return request.post<Category>('/v1/backstage/categories', data);
+  return request.post<Category>('/v1/backstage/categories/create', data);
 };
 
-export const updateCategory = (id: string, data: CreateCategoryParams) => {
-  return request.put<Category>(`/v1/backstage/categories/${id}`, data);
+export const updateCategory = (data: CreateCategoryParams & { id: string }) => {
+  return request.post<Category>('/v1/backstage/categories/update', data);
 };
 
 export const deleteCategory = (id: string) => {
-  return request.delete<void>(`/v1/backstage/categories/${id}`);
+  return request.post<void>('/v1/backstage/categories/delete', { id });
 };
 
 // Tags
@@ -49,13 +49,13 @@ export const getTags = () => {
 };
 
 export const createTag = (data: CreateTagParams) => {
-  return request.post<Tag>('/v1/backstage/tags', data);
+  return request.post<Tag>('/v1/backstage/tags/create', data);
 };
 
-export const updateTag = (id: string, data: CreateTagParams) => {
-  return request.put<Tag>(`/v1/backstage/tags/${id}`, data);
+export const updateTag = (data: CreateTagParams & { id: string }) => {
+  return request.post<Tag>('/v1/backstage/tags/update', data);
 };
 
 export const deleteTag = (id: string) => {
-  return request.delete<void>(`/v1/backstage/tags/${id}`);
+  return request.post<void>('/v1/backstage/tags/delete', { id });
 };

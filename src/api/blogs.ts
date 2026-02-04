@@ -3,7 +3,7 @@ import { request } from '../utils/request';
 export interface Blog {
   id: string;
   title: string;
-  subtitle?: string;
+  subtitle: string;
   cover?: string;
   categoryId: string;
   tagIds: string[];
@@ -17,7 +17,7 @@ export interface Blog {
 
 export interface CreateBlogParams {
   title: string;
-  subtitle?: string;
+  subtitle: string;
   cover?: string;
   categoryId: string;
   tagIds: string[];
@@ -25,7 +25,9 @@ export interface CreateBlogParams {
   content: string;
 }
 
-export interface UpdateBlogParams extends Partial<CreateBlogParams> {}
+export interface UpdateBlogParams extends Partial<CreateBlogParams> {
+  id: string;
+}
 
 export interface BlogQueryParams {
   page?: number;
@@ -45,17 +47,23 @@ export const getBlogs = (params?: BlogQueryParams) => {
 };
 
 export const createBlog = (data: CreateBlogParams) => {
-  return request.post<Blog>('/v1/backstage/blogs', data);
+  return request.post<Blog>('/v1/backstage/blogs/create', data);
 };
 
 export const getBlogDetail = (id: string) => {
   return request.get<Blog>(`/v1/backstage/blogs/${id}`);
 };
 
-export const updateBlog = (id: string, data: UpdateBlogParams) => {
-  return request.put<Blog>(`/v1/backstage/blogs/${id}`, data);
+export const updateBlog = (data: UpdateBlogParams) => {
+  return request.post<Blog>('/v1/backstage/blogs/update', data);
 };
 
 export const deleteBlog = (id: string) => {
-  return request.delete<void>(`/v1/backstage/blogs/${id}`);
+  return request.post<void>('/v1/backstage/blogs/delete', { id });
+};
+
+export const uploadFile = (file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request.post<{ url: string }>('/v1/backstage/upload', formData);
 };

@@ -179,7 +179,7 @@ const Dashboard: React.FC = () => {
   const handleCategorySubmit = async (values: CreateCategoryParams) => {
     try {
       if (editingCategory) {
-        await updateCategory(editingCategory.id, values);
+        await updateCategory({ ...values, id: editingCategory.id });
         message.success('分类更新成功');
       } else {
         await createCategory(values);
@@ -204,7 +204,7 @@ const Dashboard: React.FC = () => {
       }
 
       if (editingTag) {
-        await updateTag(editingTag.id, values);
+        await updateTag({ ...values, id: editingTag.id });
         message.success('标签更新成功');
       } else {
         await createTag(values);
