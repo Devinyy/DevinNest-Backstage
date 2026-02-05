@@ -417,7 +417,7 @@ const CreateSnippet: React.FC = () => {
             disabled={!canPublish}
             className={`border-none shadow-lg transition-all ${
               canPublish 
-                ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/20 text-white' 
+                ? '!bg-blue-600 hover:!bg-blue-500 shadow-blue-900/20 text-white' 
                 : 'bg-white/5 text-gray-500 shadow-none cursor-not-allowed hover:bg-white/5'
             }`}
           >

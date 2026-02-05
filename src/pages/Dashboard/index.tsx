@@ -103,6 +103,8 @@ const Dashboard: React.FC = () => {
   const [editingTag, setEditingTag] = useState<TagInterface | null>(null);
   const [categoryForm] = Form.useForm();
   const [tagForm] = Form.useForm();
+  const [canSubmitCategory, setCanSubmitCategory] = useState(false);
+  const [canSubmitTag, setCanSubmitTag] = useState(false);
 
   // 初始化数据
   const fetchData = async (silent = false) => {
@@ -228,6 +230,7 @@ const Dashboard: React.FC = () => {
       icon: category.icon,
       color: category.color
     });
+    setCanSubmitCategory(true);
     setIsCategoryModalVisible(true);
   };
 
@@ -237,6 +240,7 @@ const Dashboard: React.FC = () => {
       name: tag.name,
       color: tag.color
     });
+    setCanSubmitTag(true);
     setIsTagModalVisible(true);
   };
 
@@ -441,6 +445,7 @@ const Dashboard: React.FC = () => {
                     onClick={() => {
                       setEditingCategory(null);
                       categoryForm.resetFields();
+                      setCanSubmitCategory(false);
                       setIsCategoryModalVisible(true);
                     }}
                   />
@@ -493,6 +498,7 @@ const Dashboard: React.FC = () => {
                     onClick={() => {
                       setEditingTag(null);
                       tagForm.resetFields();
+                      setCanSubmitTag(false);
                       setIsTagModalVisible(true);
                     }}
                   />
@@ -533,6 +539,7 @@ const Dashboard: React.FC = () => {
           <Form
             form={categoryForm}
             onFinish={handleCategorySubmit}
+            onValuesChange={(_, allValues) => setCanSubmitCategory(!!allValues.name?.trim())}
             layout="vertical"
           >
             <Form.Item
@@ -596,7 +603,16 @@ const Dashboard: React.FC = () => {
                 setEditingCategory(null);
                 categoryForm.resetFields();
               }} className="mr-2">取消</Button>
-              <Button type="primary" htmlType="submit">确定</Button>
+              <Button 
+                type="primary" 
+                htmlType="submit"
+                disabled={!canSubmitCategory}
+                className={`transition-all ${
+                  canSubmitCategory 
+                    ? '!g-blue-600 hover:!bg-blue-500 shadow-blue-900/20 text-white shadow-lg border-none' 
+                    : 'bg-white/5 text-gray-500 shadow-none cursor-not-allowed hover:bg-white/5 border-none'
+                }`}
+              >确定</Button>
             </Form.Item>
           </Form>
         </Modal>
@@ -615,6 +631,7 @@ const Dashboard: React.FC = () => {
           <Form
             form={tagForm}
             onFinish={handleTagSubmit}
+            onValuesChange={(_, allValues) => setCanSubmitTag(!!allValues.name?.trim())}
             layout="vertical"
           >
             <Form.Item
@@ -636,7 +653,16 @@ const Dashboard: React.FC = () => {
                  setEditingTag(null);
                  tagForm.resetFields();
                }} className="mr-2">取消</Button>
-               <Button type="primary" htmlType="submit">确定</Button>
+               <Button 
+                 type="primary" 
+                 htmlType="submit"
+                 disabled={!canSubmitTag}
+                 className={`transition-all ${
+                   canSubmitTag 
+                     ? '!bg-blue-600 hover:!bg-blue-500 shadow-blue-900/20 text-white shadow-lg border-none' 
+                     : 'bg-white/5 text-gray-500 shadow-none cursor-not-allowed hover:bg-white/5 border-none'
+                 }`}
+               >确定</Button>
             </Form.Item>
           </Form>
         </Modal>
