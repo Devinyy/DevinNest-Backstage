@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Upload, Card, message, Select, DatePicker, Space } from 'antd';
 import { 
   PlusOutlined, 
@@ -19,70 +19,34 @@ import {
   SaveOutlined,
   SendOutlined
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import type { UploadFile } from 'antd/es/upload/interface';
+import { createSnippet, updateSnippet, getSnippetDetail } from '../../api/snippets';
+import { uploadFile } from '../../api/common';
+import type { SnippetBlock, TextBlock, ImageBlock, GalleryBlock, QuoteBlock } from '../../api/snippets';
 
 const { TextArea } = Input;
 const { Option } = Select;
-
-// --- Interfaces ---
-
-interface BaseBlock {
-  id: string;
-  type: 'text' | 'image' | 'gallery' | 'quote';
-}
-
-interface TextBlock extends BaseBlock {
-  type: 'text';
-  content: string;
-}
-
-interface ImageBlock extends BaseBlock {
-  type: 'image';
-  src: string;
-  caption?: string;
-  exif?: string;
-  layout?: 'normal' | 'bleed' | 'portrait';
-  file?: UploadFile; // For local preview
-}
-
-interface GalleryImage {
-  src: string;
-  exif?: string;
-  file?: UploadFile; // For local preview
-}
-
-interface GalleryBlock extends BaseBlock {
-  type: 'gallery';
-  layout: 'grid-2' | 'grid-3';
-  images: GalleryImage[];
-  caption?: string;
-}
-
-interface QuoteBlock extends BaseBlock {
-  type: 'quote';
-  content: string;
-  author?: string;
-}
-
-type Block = TextBlock | ImageBlock | GalleryBlock | QuoteBlock;
 
 // --- Helper Functions ---
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
-const mockUpload = (file: File): Promise<string> => {
-  return new Promise((resolve) => {
-    const url = URL.createObjectURL(file);
-    setTimeout(() => resolve(url), 500);
-  });
+const handleUploadFile = async (file: File): Promise<string> => {
+  try {
+    const res = await uploadFile(file);
+    return res.url;
+  } catch (error) {
+    message.error('上传失败');
+    throw error;
+  }
 };
 
 // --- Block Editors ---
 
 const BlockWrapper: React.FC<{
-  block: Block;
+  block: SnippetBlock;
   onDelete: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
@@ -149,8 +113,8 @@ const TextBlockEditor: React.FC<{ block: TextBlock; onChange: (b: TextBlock) => 
 
 const ImageBlockEditor: React.FC<{ block: ImageBlock; onChange: (b: ImageBlock) => void }> = ({ block, onChange }) => {
   const handleUpload = async (file: File) => {
-    const url = await mockUpload(file);
-    onChange({ ...block, src: url, file: file as any });
+    const url = await handleUploadFile(file);
+    onChange({ ...block, src: url });
     return false;
   };
 
@@ -210,7 +174,7 @@ const ImageBlockEditor: React.FC<{ block: ImageBlock; onChange: (b: ImageBlock) 
 
 const GalleryBlockEditor: React.FC<{ block: GalleryBlock; onChange: (b: GalleryBlock) => void }> = ({ block, onChange }) => {
   const handleAddImage = async (file: File) => {
-    const url = await mockUpload(file);
+    const url = await handleUploadFile(file);
     const newImages = [...block.images, { src: url, file: file as any }];
     onChange({ ...block, images: newImages });
     return false;
@@ -307,17 +271,42 @@ const QuoteBlockEditor: React.FC<{ block: QuoteBlock; onChange: (b: QuoteBlock) 
 
 const CreateSnippet: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [blocks, setBlocks] = useState<SnippetBlock[]>([]);
   const [coverUrl, setCoverUrl] = useState<string>('');
   const [canPublish, setCanPublish] = useState(false);
+
+  // Load data if editing
+  useEffect(() => {
+    if (id) {
+      setLoading(true);
+      getSnippetDetail(id).then(data => {
+        form.setFieldsValue({
+          title: data.metadata.title,
+          subtitle: data.metadata.subtitle,
+          date: data.metadata.date ? dayjs(data.metadata.date, 'YYYY.MM.DD') : undefined,
+          weather: data.metadata.weather,
+          location: data.metadata.location,
+          camera: data.metadata.camera,
+          tags: data.tags,
+        });
+        setCoverUrl(data.metadata.cover || '');
+        setBlocks(data.content);
+      }).catch((err) => {
+        console.error(err);
+        message.error('加载详情失败');
+      }).finally(() => {
+        setLoading(false);
+      });
+    }
+  }, [id, form]);
 
   // Form Value Watcher
   const handleValuesChange = (_: any, allValues: any) => {
     const hasTitle = !!allValues.title?.trim();
     const hasBlocks = blocks.length > 0;
-    // 简单校验：标题必填，至少有一个内容块
     setCanPublish(hasTitle && hasBlocks);
   };
 
@@ -327,19 +316,19 @@ const CreateSnippet: React.FC = () => {
     setCanPublish(!!title?.trim() && blocks.length > 0);
   }, [blocks, form]);
 
-  const handleAddBlock = (type: Block['type']) => {
-    const newBlock: Block = {
+  const handleAddBlock = (type: SnippetBlock['type']) => {
+    const newBlock: any = {
       id: generateId(),
       type,
       ...(type === 'text' ? { content: '' } : {}),
       ...(type === 'image' ? { src: '' } : {}),
       ...(type === 'gallery' ? { layout: 'grid-2', images: [] } : {}),
       ...(type === 'quote' ? { content: '' } : {}),
-    } as Block;
+    };
     setBlocks([...blocks, newBlock]);
   };
 
-  const handleUpdateBlock = (index: number, newBlock: Block) => {
+  const handleUpdateBlock = (index: number, newBlock: SnippetBlock) => {
     const newBlocks = [...blocks];
     newBlocks[index] = newBlock;
     setBlocks(newBlocks);
@@ -360,33 +349,44 @@ const CreateSnippet: React.FC = () => {
     setBlocks(newBlocks);
   };
 
-  const onFinish = (values: any) => {
+  const onFinish = async (values: any) => {
     setLoading(true);
 
-    const finalData = {
-      id: "daily" + generateId(), // 模拟 ID
+    const metadata = {
       title: values.title,
       subtitle: values.subtitle,
       cover: coverUrl,
       date: values.date ? values.date.format('YYYY.MM.DD') : dayjs().format('YYYY.MM.DD'),
-      location: values.location,
       weather: values.weather,
+      location: values.location,
       camera: values.camera,
-      tags: values.tags,
-      content: blocks
     };
 
-    console.log('Final Snippet Data:', JSON.stringify(finalData, null, 2));
+    const payload = {
+      content: blocks,
+      metadata,
+      tags: values.tags || [],
+    };
 
-    setTimeout(() => {
-      message.success('碎片发布成功！');
-      setLoading(false);
+    try {
+      if (id) {
+        await updateSnippet({ ...payload, id });
+        message.success('碎片更新成功！');
+      } else {
+        await createSnippet(payload);
+        message.success('碎片发布成功！');
+      }
       navigate('/snippets');
-    }, 1000);
+    } catch (error) {
+      console.error(error);
+      message.error(id ? '更新失败' : '发布失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCoverUpload = async (file: File) => {
-    const url = await mockUpload(file);
+    const url = await handleUploadFile(file);
     setCoverUrl(url);
     return false;
   };

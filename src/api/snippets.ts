@@ -1,21 +1,71 @@
 import { request } from '../utils/request';
 
+// Block Types (Copying from Create.tsx for consistency or defining shared types)
+export interface BaseBlock {
+  id: string;
+  type: 'text' | 'image' | 'gallery' | 'quote';
+}
+
+export interface TextBlock extends BaseBlock {
+  type: 'text';
+  content: string;
+}
+
+export interface ImageBlock extends BaseBlock {
+  type: 'image';
+  src: string;
+  caption?: string;
+  exif?: string;
+  layout?: 'normal' | 'bleed' | 'portrait';
+}
+
+export interface GalleryImage {
+  src: string;
+  exif?: string;
+}
+
+export interface GalleryBlock extends BaseBlock {
+  type: 'gallery';
+  layout: 'grid-2' | 'grid-3';
+  images: GalleryImage[];
+  caption?: string;
+}
+
+export interface QuoteBlock extends BaseBlock {
+  type: 'quote';
+  content: string;
+  author?: string;
+}
+
+export type SnippetBlock = TextBlock | ImageBlock | GalleryBlock | QuoteBlock;
+
+export interface SnippetMetadata {
+  title: string;
+  subtitle?: string;
+  cover?: string;
+  date?: string;
+  weather?: string;
+  location?: string;
+  camera?: string;
+}
+
 export interface Snippet {
   id: string;
-  content: any[]; // Block-based content
-  metadata: any; // Changed from string to any to match usage (object)
+  content: SnippetBlock[];
+  metadata: SnippetMetadata;
   tags: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateSnippetParams {
-  content: any[];
-  metadata: any;
+  content: SnippetBlock[];
+  metadata: SnippetMetadata;
   tags: string[];
 }
 
-export interface UpdateSnippetParams {
+export interface UpdateSnippetParams extends CreateSnippetParams {
   id: string;
-  content: any[];
 }
 
 export interface SnippetQueryParams {
@@ -25,8 +75,13 @@ export interface SnippetQueryParams {
   endDate?: string;
 }
 
+export interface SnippetListResult {
+  list: Snippet[];
+  total: number;
+}
+
 export const getSnippets = (params?: SnippetQueryParams) => {
-  return request.get<Snippet[]>('/v1/backstage/snippets', params);
+  return request.get<SnippetListResult>('/v1/backstage/snippets', params);
 };
 
 export const createSnippet = (data: CreateSnippetParams) => {

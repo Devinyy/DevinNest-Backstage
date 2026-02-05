@@ -74,6 +74,7 @@ const App: React.FC = () => {
             <Route path="blogs/edit/:id" element={<CreateBlog />} />
             <Route path="snippets" element={<Snippets />} />
             <Route path="snippets/create" element={<CreateSnippet />} />
+            <Route path="snippets/edit/:id" element={<CreateSnippet />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
