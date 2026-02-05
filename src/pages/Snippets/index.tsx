@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Card, Button, message, Popconfirm, Empty, Spin } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { getSnippets, deleteSnippet, Snippet } from '../../api/snippets';
+import { getSnippets, deleteSnippet } from '../../api/snippets';
+import type { Snippet } from '../../api/snippets';
 import dayjs from 'dayjs';
 
 const Snippets: React.FC = () => {
@@ -54,7 +55,7 @@ const Snippets: React.FC = () => {
         <Button 
           type="primary" 
           icon={<PlusOutlined />}
-          className="bg-white text-black border-none hover:bg-gray-200"
+          className="!bg-white/10 hover:!bg-white/20 !border-none !text-white backdrop-blur-sm shadow-none"
           onClick={() => navigate('/snippets/create')}
         >
           发布碎片
