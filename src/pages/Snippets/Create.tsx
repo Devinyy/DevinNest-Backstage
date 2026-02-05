@@ -394,7 +394,7 @@ const CreateSnippet: React.FC = () => {
   return (
     <div className="w-full px-6 pb-20">
       {/* 顶部导航 */}
-      <div className="flex items-center justify-between mb-6 sticky top-0 z-10 bg-[#0a0a0a]/80 backdrop-blur-md py-4 -mx-6 px-6 border-b border-white/5">
+      <div className="flex items-center justify-between mb-6 sticky top-0 z-10 bg-[#000000] py-4 -mx-6 px-6 border-b border-white/5">
         <div className="flex items-center cursor-pointer group" onClick={() => navigate(-1)}>
           <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mr-3 group-hover:bg-white/10 transition-colors">
             <ArrowLeftOutlined className="text-gray-400 group-hover:text-white" />
@@ -429,7 +429,7 @@ const CreateSnippet: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
         {/* 左侧：基本信息 */}
         <div className="lg:col-span-1 space-y-6">
-          <Card className="neo-card border-none bg-[#121212] sticky top-24" bordered={false} title={<span className="text-white">基本信息</span>}>
+          <Card className="neo-card border-none bg-[#121212] sticky top-24" bordered={false} title={<span className="text-white">基本信息</span>} headStyle={{ borderBottom: '1px solid #262626' }}>
             <Form
               form={form}
               layout="vertical"
@@ -503,12 +503,7 @@ const CreateSnippet: React.FC = () => {
 
         {/* 右侧：内容积木 */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-[#121212] rounded-lg p-6 min-h-[600px] border border-gray-800/50">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white m-0">内容详情</h2>
-              <span className="text-gray-500 text-sm">已添加 {blocks.length} 个模块</span>
-            </div>
-
+          <Card className="neo-card border-none bg-[#121212] min-h-[600px]" bordered={false} title={<span className="text-white">内容详情</span>} extra={<span className="text-gray-500 text-sm">已添加 {blocks.length} 个模块</span>} headStyle={{ borderBottom: '1px solid #262626' }}>
             {blocks.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-gray-800 rounded-lg bg-[#1f1f1f]/30">
                 <BuildOutlined className="text-4xl text-gray-700 mb-4" />
@@ -587,7 +582,7 @@ const CreateSnippet: React.FC = () => {
                 </Button>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
       </div>
     </div>
