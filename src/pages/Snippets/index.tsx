@@ -14,8 +14,12 @@ const Snippets: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await getSnippets();
-      setList(res.list || []);
+      const res = await getSnippets() as any;
+      if (Array.isArray(res)) {
+        setList(res);
+      } else {
+        setList(res.list || []);
+      }
     } catch (error) {
       console.error(error);
       message.error('获取列表失败');
@@ -76,24 +80,24 @@ const Snippets: React.FC = () => {
               className="bg-[#121212] border-gray-800 hover:border-gray-700 transition-colors overflow-hidden"
               bodyStyle={{ padding: 0 }}
             >
-              {item.metadata.cover ? (
+              {item.cover ? (
                 <div className="h-48 overflow-hidden relative">
-                  <img src={item.metadata.cover} alt={item.metadata.title} className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                  <img src={item.cover} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                   <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-xs text-white">
                      {item.metadata.date || dayjs(item.createdAt).format('YYYY.MM.DD')}
                   </div>
                 </div>
               ) : (
-                 <div className="h-48 bg-[#1f1f1f] flex items-center justify-center relative">
-                    <span className="text-gray-600">无封面</span>
-                    <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-xs text-white">
+                <div className="h-48 bg-[#1f1f1f] flex items-center justify-center relative">
+                  <span className="text-gray-600">无封面</span>
+                  <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-xs text-white">
                      {item.metadata.date || dayjs(item.createdAt).format('YYYY.MM.DD')}
                   </div>
-                 </div>
+                </div>
               )}
               <div className="p-5">
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-lg font-bold text-white line-clamp-1 m-0">{item.metadata.title}</h3>
+                  <h3 className="text-lg font-bold text-white line-clamp-1 m-0">{item.title}</h3>
                 </div>
                 
                 <p className="text-gray-400 text-sm line-clamp-3 mb-4 min-h-[60px]">

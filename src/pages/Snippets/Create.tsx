@@ -17,13 +17,15 @@ import {
   TagOutlined,
   ArrowLeftOutlined,
   SaveOutlined,
-  SendOutlined
+  SendOutlined,
+  SmileOutlined
 } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
-import type { UploadFile } from 'antd/es/upload/interface';
 import { createSnippet, updateSnippet, getSnippetDetail } from '../../api/snippets';
 import { uploadFile } from '../../api/common';
+import { getTags } from '../../api/taxonomy';
+import type { Tag } from '../../api/taxonomy';
 import type { SnippetBlock, TextBlock, ImageBlock, GalleryBlock, QuoteBlock } from '../../api/snippets';
 
 const { TextArea } = Input;
@@ -175,15 +177,9 @@ const ImageBlockEditor: React.FC<{ block: ImageBlock; onChange: (b: ImageBlock) 
 const GalleryBlockEditor: React.FC<{ block: GalleryBlock; onChange: (b: GalleryBlock) => void }> = ({ block, onChange }) => {
   const handleAddImage = async (file: File) => {
     const url = await handleUploadFile(file);
-    const newImages = [...block.images, { src: url, file: file as any }];
+    const newImages = [...block.images, url];
     onChange({ ...block, images: newImages });
     return false;
-  };
-
-  const updateImageExif = (index: number, exif: string) => {
-    const newImages = [...block.images];
-    newImages[index].exif = exif;
-    onChange({ ...block, images: newImages });
   };
 
   const removeImage = (index: number) => {
@@ -194,16 +190,9 @@ const GalleryBlockEditor: React.FC<{ block: GalleryBlock; onChange: (b: GalleryB
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
-        {block.images.map((img, idx) => (
+        {block.images?.map((img, idx) => (
           <div key={idx} className="relative bg-[#121212] p-2 rounded border border-gray-800">
-            <img src={img.src} alt="" className="w-full h-32 object-cover rounded mb-2" />
-            <Input 
-              size="small" 
-              placeholder="EXIF Info" 
-              value={img.exif}
-              onChange={(e) => updateImageExif(idx, e.target.value)}
-              className="bg-[#1f1f1f] border-gray-700 text-gray-300 text-xs mb-1"
-            />
+            <img src={img} alt="" className="w-full h-32 object-cover rounded mb-2" />
             <Button 
               type="text" 
               danger 
@@ -277,6 +266,16 @@ const CreateSnippet: React.FC = () => {
   const [blocks, setBlocks] = useState<SnippetBlock[]>([]);
   const [coverUrl, setCoverUrl] = useState<string>('');
   const [canPublish, setCanPublish] = useState(false);
+  const [tagsList, setTagsList] = useState<Tag[]>([]);
+
+  // Load tags
+  useEffect(() => {
+    getTags().then(data => {
+      setTagsList(data || []);
+    }).catch(err => {
+      console.error('Failed to load tags:', err);
+    });
+  }, []);
 
   // Load data if editing
   useEffect(() => {
@@ -284,16 +283,17 @@ const CreateSnippet: React.FC = () => {
       setLoading(true);
       getSnippetDetail(id).then(data => {
         form.setFieldsValue({
-          title: data.metadata.title,
-          subtitle: data.metadata.subtitle,
-          date: data.metadata.date ? dayjs(data.metadata.date, 'YYYY.MM.DD') : undefined,
+          title: data.title,
+          subtitle: data.subtitle,
+          date: data.metadata.date ? dayjs(data.metadata.date, 'YYYY-MM-DD') : undefined,
           weather: data.metadata.weather,
+          mood: data.metadata.mood,
           location: data.metadata.location,
           camera: data.metadata.camera,
           tags: data.tags,
         });
-        setCoverUrl(data.metadata.cover || '');
-        setBlocks(data.content);
+        setCoverUrl(data.cover || '');
+        setBlocks(data.content || []);
       }).catch((err) => {
         console.error(err);
         message.error('加载详情失败');
@@ -339,7 +339,7 @@ const CreateSnippet: React.FC = () => {
     setBlocks(newBlocks);
   };
 
-  const handleMoveBlock = (index: number, direction: 'up' | 'down') => {
+  const handleMoveBlock = (index: number, direction: 'up' | 'down'): void => {
     if (direction === 'up' && index === 0) return;
     if (direction === 'down' && index === blocks.length - 1) return;
     
@@ -353,16 +353,17 @@ const CreateSnippet: React.FC = () => {
     setLoading(true);
 
     const metadata = {
-      title: values.title,
-      subtitle: values.subtitle,
-      cover: coverUrl,
-      date: values.date ? values.date.format('YYYY.MM.DD') : dayjs().format('YYYY.MM.DD'),
+      date: values.date ? values.date.format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'),
       weather: values.weather,
+      mood: values.mood,
       location: values.location,
       camera: values.camera,
     };
 
     const payload = {
+      title: values.title,
+      subtitle: values.subtitle,
+      cover: coverUrl,
       content: blocks,
       metadata,
       tags: values.tags || [],
@@ -392,9 +393,9 @@ const CreateSnippet: React.FC = () => {
   };
 
   return (
-    <div className="w-full px-6 pb-20 pt-0">
+    <div className="w-full px-6 pb-20 pt-6">
       {/* 顶部导航 */}
-      <div className="flex items-center justify-between mb-6 sticky top-0 z-10 bg-[#0a0a0a]/80 backdrop-blur-md py-4 -mx-6 px-6 border-b border-white/5">
+      <div className="flex items-center justify-between mb-6 sticky top-0 z-10 bg-[#0a0a0a]/90 backdrop-blur-md py-4 -mx-6 px-6 border-b border-white/5 shadow-sm transition-all duration-200">
         <div className="flex items-center cursor-pointer group" onClick={() => navigate(-1)}>
           <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mr-3 group-hover:bg-white/10 transition-colors">
             <ArrowLeftOutlined className="text-gray-400 group-hover:text-white" />
@@ -428,8 +429,8 @@ const CreateSnippet: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
         {/* 左侧：基本信息 */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card className="neo-card border-none bg-[#121212] sticky top-24" bordered={false} title={<span className="text-white">基本信息</span>} headStyle={{ borderBottom: '1px solid #262626' }}>
+        <div className="lg:col-span-1">
+          <Card className="neo-card border-none bg-[#121212]" bordered={false} title={<span className="text-white">基本信息</span>} headStyle={{ borderBottom: '1px solid #262626' }}>
             <Form
               form={form}
               layout="vertical"
@@ -476,6 +477,10 @@ const CreateSnippet: React.FC = () => {
                 </Form.Item>
               </div>
 
+              <Form.Item name="mood" label={<span className="text-gray-400">心情</span>}>
+                 <Input prefix={<SmileOutlined className="text-gray-600" />} placeholder="e.g. Happy, Focused" className="bg-[#1f1f1f] border-gray-800 text-white" />
+              </Form.Item>
+
               <Form.Item name="location" label={<span className="text-gray-400">地点</span>}>
                 <Input prefix={<EnvironmentOutlined className="text-gray-600" />} placeholder="城市 · 地标" className="bg-[#1f1f1f] border-gray-800 text-white" />
               </Form.Item>
@@ -492,9 +497,9 @@ const CreateSnippet: React.FC = () => {
                   popupClassName="bg-[#1f1f1f]"
                   suffixIcon={<TagOutlined className="text-gray-500" />}
                 >
-                  <Option value="旅行">旅行</Option>
-                  <Option value="摄影">摄影</Option>
-                  <Option value="生活">生活</Option>
+                  {tagsList.map(tag => (
+                    <Option key={tag.id} value={tag.name}>{tag.name}</Option>
+                  ))}
                 </Select>
               </Form.Item>
             </Form>
@@ -511,7 +516,7 @@ const CreateSnippet: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {blocks.map((block, index) => (
+                {blocks?.map((block, index) => (
                   <BlockWrapper
                     key={block.id}
                     block={block}

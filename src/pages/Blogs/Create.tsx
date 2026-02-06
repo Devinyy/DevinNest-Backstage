@@ -353,9 +353,9 @@ const CreateBlog: React.FC = () => {
   };
 
   return (
-    <div className="w-full px-6">
+    <div className="w-full px-6 pt-6">
       {/* 顶部导航 */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 sticky top-0 z-10 bg-[#0a0a0a]/90 backdrop-blur-md py-4 -mx-6 px-6 border-b border-white/5 shadow-sm transition-all duration-200">
         <div className="flex items-center cursor-pointer group" onClick={() => navigate(-1)}>
           <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mr-3 group-hover:bg-white/10 transition-colors">
             <ArrowLeftOutlined className="text-gray-400 group-hover:text-white" />

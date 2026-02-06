@@ -19,15 +19,10 @@ export interface ImageBlock extends BaseBlock {
   layout?: 'normal' | 'bleed' | 'portrait';
 }
 
-export interface GalleryImage {
-  src: string;
-  exif?: string;
-}
-
 export interface GalleryBlock extends BaseBlock {
   type: 'gallery';
   layout: 'grid-2' | 'grid-3';
-  images: GalleryImage[];
+  images: string[];
   caption?: string;
 }
 
@@ -40,17 +35,18 @@ export interface QuoteBlock extends BaseBlock {
 export type SnippetBlock = TextBlock | ImageBlock | GalleryBlock | QuoteBlock;
 
 export interface SnippetMetadata {
-  title: string;
-  subtitle?: string;
-  cover?: string;
   date?: string;
   weather?: string;
+  mood?: string;
   location?: string;
   camera?: string;
 }
 
 export interface Snippet {
   id: string;
+  title: string;
+  subtitle?: string;
+  cover?: string;
   content: SnippetBlock[];
   metadata: SnippetMetadata;
   tags: string[];
@@ -59,6 +55,9 @@ export interface Snippet {
 }
 
 export interface CreateSnippetParams {
+  title: string;
+  subtitle?: string;
+  cover?: string;
   content: SnippetBlock[];
   metadata: SnippetMetadata;
   tags: string[];

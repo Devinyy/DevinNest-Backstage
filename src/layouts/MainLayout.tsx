@@ -56,6 +56,9 @@ const MainLayout: React.FC = () => {
     onClick: handleMenuClick,
   };
 
+  // 针对新建/编辑页面，移除顶部 padding 以便实现吸顶效果
+  const isNoPaddingTop = location.pathname.includes('/create') || location.pathname.includes('/edit');
+
   return (
     <Layout className="h-screen overflow-hidden bg-[#000000]">
       <Sider 
@@ -110,7 +113,7 @@ const MainLayout: React.FC = () => {
           </Space>
         </Header>
         <Content
-          className="m-6 mt-0 p-6 overflow-y-auto bg-transparent"
+          className={`m-6 mt-0 overflow-y-auto bg-transparent ${isNoPaddingTop ? 'px-6 pb-6 pt-0' : 'p-6'}`}
         >
           <Outlet />
         </Content>
