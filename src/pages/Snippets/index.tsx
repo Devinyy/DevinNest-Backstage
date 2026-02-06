@@ -84,14 +84,14 @@ const Snippets: React.FC = () => {
                 <div className="h-48 overflow-hidden relative">
                   <img src={item.cover} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
                   <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-xs text-white">
-                     {item.metadata.date || dayjs(item.createdAt).format('YYYY.MM.DD')}
+                     {dayjs(item.metadata.date || item.createdAt).format('YYYY.MM.DD')}
                   </div>
                 </div>
               ) : (
                 <div className="h-48 bg-[#1f1f1f] flex items-center justify-center relative">
                   <span className="text-gray-600">无封面</span>
                   <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-xs text-white">
-                     {item.metadata.date || dayjs(item.createdAt).format('YYYY.MM.DD')}
+                     {dayjs(item.metadata.date || item.createdAt).format('YYYY.MM.DD')}
                   </div>
                 </div>
               )}

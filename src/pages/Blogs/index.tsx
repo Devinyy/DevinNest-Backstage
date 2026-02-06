@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Space, Tag, Popconfirm, message } from 'antd';
+import { Table, Button, Space, Tag, Popconfirm, message, Empty, Spin } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate } from 'react-router-dom';
 import { PlusOutlined, EditOutlined } from '@ant-design/icons';
@@ -132,7 +132,7 @@ const Blogs: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-white">博客列表</h2>
         <Button 
@@ -144,21 +144,29 @@ const Blogs: React.FC = () => {
           新增博客
         </Button>
       </div>
-      <Table 
-        columns={columns} 
-        dataSource={data} 
-        rowKey="id"
-        loading={loading}
-        pagination={{
-          ...pagination,
-          total,
-          showSizeChanger: true,
-          showTotal: (total) => `共 ${total} 条`,
-          className: "custom-pagination" // 可以在 global css 中定义样式以适配深色模式
-        }}
-        onChange={handleTableChange}
-        className="neo-table"
-      />
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <Spin size="large" />
+        </div>
+      ) : data.length === 0 ? (
+        <Empty description={<span className="text-gray-500">暂无博客</span>} />
+      ) : (
+        <Table 
+          columns={columns} 
+          dataSource={data} 
+          rowKey="id"
+          loading={loading}
+          pagination={{
+            ...pagination,
+            total,
+            showSizeChanger: true,
+            showTotal: (total) => `共 ${total} 条`,
+            className: "custom-pagination" // 可以在 global css 中定义样式以适配深色模式
+          }}
+          onChange={handleTableChange}
+          className="neo-table"
+        />
+      )}
     </div>
   );
 };
