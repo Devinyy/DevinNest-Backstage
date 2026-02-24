@@ -266,7 +266,7 @@ const CreateBlog: React.FC = () => {
           const values = form.getFieldsValue();
           checkPublishState(values);
         })
-        .catch(err => {
+        .catch(() => {
           message.error('获取博客详情失败');
           navigate('/blogs');
         })
