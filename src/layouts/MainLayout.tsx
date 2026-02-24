@@ -10,6 +10,8 @@ import {
   BellOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useAuthStore } from '../stores/authStore';
+import type { MenuProps } from 'antd';
 
 const { Header, Sider, Content } = Layout;
 
@@ -17,6 +19,7 @@ const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout, user } = useAuthStore();
 
   const menuItems = [
     {
@@ -36,14 +39,25 @@ const MainLayout: React.FC = () => {
     },
   ];
 
-  const userMenu = {
+  const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
+    if (key === 'logout') {
+      logout();
+      navigate('/login');
+    }
+  };
+
+  const userMenu: MenuProps = {
     items: [
       { key: 'profile', label: '个人中心' },
       { key: 'settings', label: '设置' },
-      { type: 'divider' as const },
+      { type: 'divider' },
       { key: 'logout', label: '退出登录', danger: true },
     ],
+    onClick: handleMenuClick,
   };
+
+  // 针对新建/编辑页面，移除顶部 padding 以便实现吸顶效果
+  const isNoPaddingTop = location.pathname.includes('/create') || location.pathname.includes('/edit');
 
   return (
     <Layout className="h-screen overflow-hidden bg-[#000000]">
@@ -93,13 +107,13 @@ const MainLayout: React.FC = () => {
             <Dropdown menu={userMenu} placement="bottomRight" arrow={{ pointAtCenter: true }}>
               <div className="flex items-center cursor-pointer p-1.5 rounded-full hover:bg-white/5 transition-colors">
                 <Avatar size="default" icon={<UserOutlined />} className="bg-white/10 text-white" />
-                <span className="ml-3 text-sm font-medium text-gray-200">Devin</span>
+                <span className="ml-3 text-sm font-medium text-gray-200">{user?.username || 'Devin'}</span>
               </div>
             </Dropdown>
           </Space>
         </Header>
         <Content
-          className="m-6 mt-0 p-6 overflow-y-auto bg-transparent"
+          className={`m-6 mt-0 overflow-y-auto bg-transparent ${isNoPaddingTop ? 'px-6 pb-6 pt-0' : 'p-6'}`}
         >
           <Outlet />
         </Content>

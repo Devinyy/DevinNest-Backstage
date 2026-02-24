@@ -1,6 +1,8 @@
 import { createAlova, type Method } from 'alova'; 
 import adapterFetch from 'alova/fetch'; 
 import { retry } from 'alova/server'; 
+import { message } from 'antd';
+import { useAuthStore } from '../stores/authStore';
 
 // 定义 API 响应的基础结构 
 export interface ApiResponse<T = any> { 
@@ -69,37 +71,66 @@ export const alovaInstance = createAlova({
   baseURL, 
   requestAdapter: adapterFetch(), 
   timeout: 10000, 
+  cacheFor: null, // 全局禁用缓存，确保后台管理系统数据实时性
 
   beforeRequest(method) { 
     // 默认 Header 
-    if (!method.config.headers['Content-Type']) { 
+    if (!method.config.headers['Content-Type'] && !(method.data instanceof FormData)) { 
       method.config.headers['Content-Type'] = 'application/json'; 
     } 
+    
+    // 禁用缓存 Header
+    method.config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+    method.config.headers['Pragma'] = 'no-cache';
+    method.config.headers['Expires'] = '0';
+
     // 可以在这里注入 Token 等通用 Header 
-  }, 
+    // 登录接口无需 Token
+    if (!method.url.includes('/auth/login')) {
+      const token = useAuthStore.getState().token;
+      if (token) {
+        method.config.headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+  },  
 
   responded: { 
-    onSuccess: async (response, method) => { 
-      const isJson = response.headers.get('content-type')?.includes('json'); 
+    onSuccess: async (response) => {
+      // 1. 全局处理响应数据
+      const json = await response.json();
+      if (json.code !== 200) {
+        throw new Error(json.message || '请求失败');
+      }
+      return json.data;
+    },
+
+    // 响应错误拦截器
+    onError: async (err) => {
+      let errorMessage = err.message || '请求失败';
       
-      if (isJson) { 
-        const json = await response.json(); 
-        // 业务状态码处理 
-        if (json.code !== undefined && json.code !== 200) { 
-          throw new Error(json.message || '业务请求失败'); 
-        } 
-        return json.data !== undefined ? json.data : json; 
-      } 
-      return response.blob(); 
-    }, 
-    
-    onError: (err, method) => { 
-      // 可以在这里统一处理，也可以在 catch 中处理 
-      // 抛出错误以便在组件中可以捕获 
-      throw err; 
-    } 
-  } 
-}); 
+      // 尝试解析响应体中的错误信息
+      if (err.response) {
+        try {
+          const json = await err.response.json();
+          if (json.message) {
+            errorMessage = json.message;
+          } else if (json.detail) {
+            // FastAPI 默认错误格式
+            errorMessage = typeof json.detail === 'string' ? json.detail : JSON.stringify(json.detail);
+          }
+        } catch (e) {
+          // 解析失败，使用状态码文本
+          errorMessage = err.response.statusText || errorMessage;
+        }
+      }
+
+      // 1. 全局错误处理
+      console.error('Request Error:', err, errorMessage);
+      message.error(errorMessage);
+      throw err;
+    }
+  }
+});
 
 /** 
  * 通用请求封装类 

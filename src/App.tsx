@@ -4,7 +4,12 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import Blogs from './pages/Blogs';
+import CreateBlog from './pages/Blogs/Create';
 import Snippets from './pages/Snippets';
+import CreateSnippet from './pages/Snippets/Create';
+import Login from './pages/Login';
+import NotFound from './pages/NotFound';
+import RequireAuth from './components/RequireAuth';
 
 const App: React.FC = () => {
   return (
@@ -57,11 +62,21 @@ const App: React.FC = () => {
     >
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<MainLayout />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={
+            <RequireAuth>
+              <MainLayout />
+            </RequireAuth>
+          }>
             <Route index element={<Dashboard />} />
             <Route path="blogs" element={<Blogs />} />
+            <Route path="blogs/create" element={<CreateBlog />} />
+            <Route path="blogs/edit/:id" element={<CreateBlog />} />
             <Route path="snippets" element={<Snippets />} />
+            <Route path="snippets/create" element={<CreateSnippet />} />
+            <Route path="snippets/edit/:id" element={<CreateSnippet />} />
           </Route>
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </ConfigProvider>
