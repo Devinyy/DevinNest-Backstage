@@ -81,7 +81,7 @@ export const alovaInstance = createAlova({
     
     // 禁用缓存 Header
     method.config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
-    method.config.headers['Pragma'] = 'no-cache';
+    // method.config.headers['Pragma'] = 'no-cache';
     method.config.headers['Expires'] = '0';
 
     // 可以在这里注入 Token 等通用 Header 
