@@ -101,7 +101,7 @@ const Snippets: React.FC = () => {
                 </div>
                 
                 <p className="text-gray-400 text-sm line-clamp-3 mb-4 min-h-[60px]">
-                  {getSummary(item)}
+                  {item.subtitle || getSummary(item)}
                 </p>
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-800">
