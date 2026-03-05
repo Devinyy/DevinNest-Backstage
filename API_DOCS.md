@@ -20,70 +20,66 @@ interface ApiResponse<T> {
 ## 2. 认证模块 (Auth)
 
 ### 2.1 用户登录
-- **URL**: `/backstage/auth/login`
+- **URL**: `/api/v1/backstage/auth/login`
 - **Method**: `POST`
 - **描述**: 用户名密码登录，获取 Token。
 - **请求参数**:
   ```json
   {
-    "username": "admin",
-    "password": "Base64(RSA_Encrypt(password))" // 使用 RSA 公钥加密后的 Base64 字符串
+    "username": "string",
+    "password": "string"
   }
   ```
 - **响应数据**:
   ```json
   {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "userInfo": {
-      "id": "1",
-      "username": "admin",
-      "avatar": "https://example.com/avatar.jpg"
-    }
+    "token": "string",
+    "userInfo": "..."
   }
   ```
 
 ### 2.2 获取当前用户信息
-- **URL**: `/backstage/auth/me`
+- **URL**: `/api/v1/backstage/auth/me`
 - **Method**: `GET`
 - **描述**: 校验 Token 有效性并获取用户信息。
+In a real app, you would decode the token to get the user ID.
+- **响应数据**:
+  ```json
+  {
+    "id": "string",
+    "username": "string",
+    "avatar": "string"
+  }
+  ```
 
 ### 2.3 退出登录
-- **URL**: `/backstage/auth/logout`
+- **URL**: `/api/v1/backstage/auth/logout`
 - **Method**: `POST`
+- **描述**: 退出登录 (Client side clears token).
+- **响应数据**:
+  (无返回数据)
 
 ## 3. 仪表盘 (Dashboard)
 
 ### 3.1 获取统计数据
-- **URL**: `/backstage/dashboard/stats`
+- **URL**: `/api/v1/backstage/dashboard/stats`
 - **Method**: `GET`
 - **描述**: 获取首页所需的各项统计指标。
 - **响应数据**:
   ```json
   {
-    "blogsCount": 120,
-    "snippetsCount": 350,
-    "categoriesCount": 8,
-    "tagsCount": 24,
-    "blogsNewThisMonth": 5,
-    "snippetsNewThisMonth": 12,
+    "blogsCount": 0,
+    "snippetsCount": 0,
+    "categoriesCount": 0,
+    "tagsCount": 0,
+    "blogsNewThisMonth": 0,
+    "snippetsNewThisMonth": 0,
     "latestActivity": [
       {
-        "id": "1",
-        "title": "React 19 新特性解析",
-        "type": "blog",
-        "createdAt": "2023-10-01T12:00:00Z",
-        "cover": "https://example.com/cover.jpg",
-        "category": { "id": "1", "name": "技术", "color": "blue" },
-        "tags": [{ "id": "1", "name": "React", "color": "cyan" }]
-      },
-      {
-        "id": "2",
-        "title": "今日感悟...",
-        "type": "snippet",
-        "createdAt": "2023-10-02T09:30:00Z",
-        "cover": "https://example.com/snippet-image.jpg",
-        "category": null,
-        "tags": [{ "id": "2", "name": "Life", "color": "green" }]
+        "id": "string",
+        "title": "string",
+        "type": "string",
+        "createdAt": "string"
       }
     ]
   }
@@ -92,206 +88,629 @@ interface ApiResponse<T> {
 ## 4. 博客管理 (Blogs)
 
 ### 4.1 获取博客列表
-- **URL**: `/backstage/blogs`
+- **URL**: `/api/v1/backstage/blogs`
+- **Method**: `GET`
+- **描述**: 获取博客列表，支持分页和筛选。
+- **Query 参数**:
+  - `page`: - 
+  - `pageSize`: - 
+  - `status`: - 
+  - `keyword`: - 
+  - `categoryId`: - 
+- **响应数据**:
+  ```json
+  {
+    "list": [
+      "..."
+    ],
+    "total": 0
+  }
+  ```
+
+### 4.2 Create Blog
+- **URL**: `/api/v1/backstage/blogs/create`
+- **Method**: `POST`
+- **描述**: Create a new blog.
+- **请求参数**:
+  ```json
+  {
+    "title": "string",
+    "subtitle": "any",
+    "cover": "any",
+    "categoryId": "string",
+    "tagIds": [
+      "..."
+    ],
+    "status": "string",
+    "content": "string"
+  }
+  ```
+- **响应数据**:
+  ```json
+  {
+    "title": "string",
+    "subtitle": "any",
+    "cover": "any",
+    "categoryId": "string",
+    "tagIds": [
+      "..."
+    ],
+    "status": "string",
+    "id": "string",
+    "content": "any",
+    "views": 0,
+    "createdAt": "string",
+    "category": "any",
+    "tags": [
+      "..."
+    ]
+  }
+  ```
+
+### 4.3 获取博客详情
+- **URL**: `/api/v1/backstage/blogs/{id}`
+- **Method**: `GET`
+- **描述**: 获取博客详情。
+- **响应数据**:
+  ```json
+  {
+    "title": "string",
+    "subtitle": "any",
+    "cover": "any",
+    "categoryId": "string",
+    "tagIds": [
+      "..."
+    ],
+    "status": "string",
+    "id": "string",
+    "content": "any",
+    "views": 0,
+    "createdAt": "string",
+    "category": "any",
+    "tags": [
+      "..."
+    ]
+  }
+  ```
+
+### 4.4 更新博客
+- **URL**: `/api/v1/backstage/blogs/update`
+- **Method**: `POST`
+- **描述**: 更新博客文章。
+- **请求参数**:
+  ```json
+  {
+    "id": "string",
+    "title": "string",
+    "subtitle": "any",
+    "cover": "any",
+    "categoryId": "string",
+    "tagIds": [
+      "..."
+    ],
+    "status": "string",
+    "content": "any"
+  }
+  ```
+- **响应数据**:
+  ```json
+  {
+    "title": "string",
+    "subtitle": "any",
+    "cover": "any",
+    "categoryId": "string",
+    "tagIds": [
+      "..."
+    ],
+    "status": "string",
+    "id": "string",
+    "content": "any",
+    "views": 0,
+    "createdAt": "string",
+    "category": "any",
+    "tags": [
+      "..."
+    ]
+  }
+  ```
+
+### 4.5 删除博客
+- **URL**: `/api/v1/backstage/blogs/delete`
+- **Method**: `POST`
+- **描述**: 删除博客文章。
+- **请求参数**:
+  ```json
+  {
+    "id": "string"
+  }
+  ```
+- **响应数据**:
+  (无返回数据)
+
+## 5. 碎片管理 (Snippets)
+
+### 5.1 获取碎片列表
+- **URL**: `/api/v1/backstage/snippets`
 - **Method**: `GET`
 - **Query 参数**:
-  - `page`: 页码 (默认 1)
-  - `pageSize`: 每页数量 (默认 10)
-  - `status`: 状态 (draft/published)
-  - `keyword`: 搜索关键词 (标题/内容)
-  - `categoryId`: 分类筛选
+  - `page`: - 
+  - `pageSize`: - 
+- **响应数据**:
+  ```json
+  [
+    {
+      "content": "...",
+      "metadata": "...",
+      "tags": "...",
+      "id": "..."
+    }
+  ]
+  ```
+
+### 5.2 Create Snippet
+- **URL**: `/api/v1/backstage/snippets/create`
+- **Method**: `POST`
+- **请求参数**:
+  ```json
+  {
+    "content": [
+      "..."
+    ],
+    "metadata": "...",
+    "tags": [
+      "..."
+    ]
+  }
+  ```
+- **响应数据**:
+  ```json
+  {
+    "content": [
+      "..."
+    ],
+    "metadata": "...",
+    "tags": [
+      "..."
+    ],
+    "id": "string"
+  }
+  ```
+
+### 5.3 获取碎片详情
+- **URL**: `/api/v1/backstage/snippets/{id}`
+- **Method**: `GET`
+- **响应数据**:
+  ```json
+  {
+    "content": [
+      "..."
+    ],
+    "metadata": "...",
+    "tags": [
+      "..."
+    ],
+    "id": "string"
+  }
+  ```
+
+### 5.4 更新碎片
+- **URL**: `/api/v1/backstage/snippets/update`
+- **Method**: `POST`
+- **请求参数**:
+  ```json
+  {
+    "id": "string",
+    "content": [
+      "..."
+    ],
+    "metadata": "...",
+    "tags": [
+      "..."
+    ]
+  }
+  ```
+- **响应数据**:
+  ```json
+  {
+    "content": [
+      "..."
+    ],
+    "metadata": "...",
+    "tags": [
+      "..."
+    ],
+    "id": "string"
+  }
+  ```
+
+### 5.5 删除碎片
+- **URL**: `/api/v1/backstage/snippets/delete`
+- **Method**: `POST`
+- **请求参数**:
+  ```json
+  {
+    "id": "string"
+  }
+  ```
+- **响应数据**:
+  (无返回数据)
+
+## 6. 分类与标签 (Taxonomy)
+
+### 6.1 获取分类列表
+- **URL**: `/api/v1/backstage/categories`
+- **Method**: `GET`
+- **响应数据**:
+  ```json
+  [
+    {
+      "name": "...",
+      "icon": "...",
+      "color": "...",
+      "id": "...",
+      "count": "..."
+    }
+  ]
+  ```
+
+### 6.2 创建分类
+- **URL**: `/api/v1/backstage/categories/create`
+- **Method**: `POST`
+- **请求参数**:
+  ```json
+  {
+    "name": "string",
+    "icon": "any",
+    "color": "any"
+  }
+  ```
+- **响应数据**:
+  ```json
+  {
+    "name": "string",
+    "icon": "any",
+    "color": "any",
+    "id": "string",
+    "count": 0
+  }
+  ```
+
+### 6.3 更新分类
+- **URL**: `/api/v1/backstage/categories/update`
+- **Method**: `POST`
+- **请求参数**:
+  ```json
+  {
+    "id": "string",
+    "name": "string",
+    "icon": "any",
+    "color": "any"
+  }
+  ```
+- **响应数据**:
+  ```json
+  {
+    "name": "string",
+    "icon": "any",
+    "color": "any",
+    "id": "string",
+    "count": 0
+  }
+  ```
+
+### 6.4 删除分类
+- **URL**: `/api/v1/backstage/categories/delete`
+- **Method**: `POST`
+- **请求参数**:
+  ```json
+  {
+    "id": "string"
+  }
+  ```
+- **响应数据**:
+  (无返回数据)
+
+### 6.5 获取标签列表
+- **URL**: `/api/v1/backstage/tags`
+- **Method**: `GET`
+- **响应数据**:
+  ```json
+  [
+    {
+      "name": "...",
+      "color": "...",
+      "id": "...",
+      "count": "..."
+    }
+  ]
+  ```
+
+### 6.6 创建标签
+- **URL**: `/api/v1/backstage/tags/create`
+- **Method**: `POST`
+- **请求参数**:
+  ```json
+  {
+    "name": "string",
+    "color": "any"
+  }
+  ```
+- **响应数据**:
+  ```json
+  {
+    "name": "string",
+    "color": "any",
+    "id": "string",
+    "count": 0
+  }
+  ```
+
+### 6.7 更新标签
+- **URL**: `/api/v1/backstage/tags/update`
+- **Method**: `POST`
+- **请求参数**:
+  ```json
+  {
+    "id": "string",
+    "name": "string",
+    "color": "any"
+  }
+  ```
+- **响应数据**:
+  ```json
+  {
+    "name": "string",
+    "color": "any",
+    "id": "string",
+    "count": 0
+  }
+  ```
+
+### 6.8 删除标签
+- **URL**: `/api/v1/backstage/tags/delete`
+- **Method**: `POST`
+- **请求参数**:
+  ```json
+  {
+    "id": "string"
+  }
+  ```
+- **响应数据**:
+  (无返回数据)
+
+## 7. 通用接口 (Common)
+
+### 7.1 文件上传
+- **URL**: `/api/v1/backstage/upload`
+- **Method**: `POST`
+- **描述**: 上传文件到服务器。
+- **请求参数**:
+- **响应数据**:
+  ```json
+  {
+    "url": "string",
+    "filename": "string"
+  }
+  ```
+
+## 8. AI 服务 (LLM)
+
+### 8.1 Chat Completion
+- **URL**: `/api/v1/ai/chat`
+- **Method**: `POST`
+- **描述**: Generate a chat completion using the configured LLM.
+- **请求参数**:
+  ```json
+  {
+    "messages": [
+      "..."
+    ],
+    "model": "string",
+    "temperature": 0.0
+  }
+  ```
+- **响应数据**:
+  ```json
+  {
+    "id": "string",
+    "choices": [
+      "..."
+    ],
+    "created": 0,
+    "model": "string"
+  }
+  ```
+
+## 9. DevinNest 项目 (Projects)
+
+### 9.1 Read Projects
+- **URL**: `/api/v1/nest/projects/`
+- **Method**: `GET`
+- **描述**: Retrieve projects for the current user (DevinNest Web).
+- **Query 参数**:
+  - `skip`: - 
+  - `limit`: - 
+- **响应数据**:
+  ```json
+  [
+    {
+      "id": "...",
+      "name": "...",
+      "description": "...",
+      "owner": "..."
+    }
+  ]
+  ```
+
+### 9.2 Create Project
+- **URL**: `/api/v1/nest/projects/`
+- **Method**: `POST`
+- **描述**: Create a new project.
+- **请求参数**:
+  ```json
+  {
+    "id": 0,
+    "name": "string",
+    "description": "string",
+    "owner": "string"
+  }
+  ```
+- **响应数据**:
+  ```json
+  {
+    "id": 0,
+    "name": "string",
+    "description": "string",
+    "owner": "string"
+  }
+  ```
+
+## 10. 前台首页 (Home)
+
+### 10.1 获取最新文章
+- **URL**: `/api/v1/nest/home/latest-articles`
+- **Method**: `GET`
+- **描述**: 获取首页展示的最新文章列表（最多4篇）。
+- **响应数据**:
+  ```json
+  {
+    "title": "string",
+    "url": "string",
+    "articles": [
+      {
+        "cover": "string",
+        "title": "string",
+        "subdesc": "string",
+        "url": "string",
+        "time": "string",
+        "views": 0,
+        "category": "string",
+        "tags": [
+          "string"
+        ]
+      }
+    ]
+  }
+  ```
+
+### 10.2 获取最新碎片
+- **URL**: `/api/v1/nest/home/latest-snippets`
+- **Method**: `GET`
+- **描述**: 获取首页展示的最新日常碎片（最多4篇）。
+- **响应数据**:
+  ```json
+  {
+    "diaryCards": [
+      {
+        "title": "string",
+        "url": "string",
+        "bgStyle": "string",
+        "textStyle": "string"
+      }
+    ]
+  }
+  ```
+
+## 11. 前台博客 (Blog)
+
+### 11.1 获取博客文章列表
+- **URL**: `/api/v1/nest/blog/list`
+- **Method**: `GET`
+- **描述**: 获取博客文章列表，支持分页、分类/标签筛选、关键词搜索及按年份筛选。
+- **Query 参数**:
+  - `page`: 当前页码 (默认 1)
+  - `pageSize`: 每页条数 (默认 10)
+  - `categoryId`: 按分类ID筛选 (可选)
+  - `tag`: 按标签名筛选 (可选)
+  - `keyword`: 搜索关键词 (可选)
+  - `year`: 按年份筛选 (可选)
 - **响应数据**:
   ```json
   {
     "list": [
       {
-        "id": "1",
-        "title": "React 19 新特性解析",
-        "subtitle": "探索前端开发的未来",
-        "cover": "https://example.com/cover.jpg",
-        "category": { "id": "1", "name": "技术" },
-        "tags": [{ "id": "1", "name": "React" }],
-        "views": 1024,
-        "status": "published",
-        "createdAt": "2023-10-01T12:00:00Z"
-      }
-    ],
-    "total": 100
-  }
-  ```
-
-### 4.2 获取博客详情
-- **URL**: `/backstage/blogs/:id`
-- **Method**: `GET`
-- **响应数据**: (包含 Markdown 内容)
-
-### 4.3 创建博客
-- **URL**: `/backstage/blogs/create`
-- **Method**: `POST`
-- **请求参数**:
-  ```json
-  {
-    "title": "文章标题",
-    "subtitle": "副标题",
-    "content": "# Markdown 内容...",
-    "cover": "https://...",
-    "categoryId": "1",
-    "tagIds": ["1", "2"],
-    "status": "published" // 或 'draft'
-  }
-  ```
-
-### 4.4 更新博客
-- **URL**: `/backstage/blogs/update`
-- **Method**: `POST`
-- **请求参数**:
-  ```json
-  {
-    "id": "1",
-    "title": "更新后的标题",
-    "content": "..."
-  }
-  ```
-
-### 4.5 删除博客
-- **URL**: `/backstage/blogs/delete`
-- **Method**: `POST`
-- **请求参数**:
-  ```json
-  {
-    "id": "1"
-  }
-  ```
-
-## 5. 碎片管理 (Snippets)
-
-### 5.1 获取碎片列表
-- **URL**: `/backstage/snippets`
-- **Method**: `GET`
-- **Query 参数**: `page`, `pageSize`, `startDate`, `endDate`
-
-### 5.2 获取碎片详情
-- **URL**: `/backstage/snippets/:id`
-- **Method**: `GET`
-
-### 5.3 创建碎片
-- **URL**: `/backstage/snippets/create`
-- **Method**: `POST`
-- **描述**: 碎片采用结构化 Block 存储。
-- **请求参数**:
-  ```json
-  {
-    "title": "今日随笔",
-    "subtitle": "测试副标题",
-    "cover": "https://example.com/cover.jpg",
-    "content": [ // Block 数组
-      {
-        "type": "text",
-        "content": "今天天气真不错，去公园散步了。"
-      },
-      {
-        "type": "image",
-        "src": "https://...",
-        "caption": "公园的一角"
-      },
-      {
-        "type": "gallery",
-        "images": [
-            "https://example.com/img1.jpg",
-            "https://example.com/img2.jpg"
+        "id": "string",
+        "title": "string",
+        "desc": "string",
+        "slug": "string",
+        "cover": "string",
+        "date": "string",
+        "category": {
+          "id": "string",
+          "name": "string"
+        },
+        "tags": [
+          "string"
         ],
-        "caption": "公园随拍"
-      },
-      {
-        "type": "quote",
-        "content": "Stay hungry, stay foolish.",
-        "author": "Steve Jobs"
+        "views": 0
       }
     ],
-    "metadata": {
-      "weather": "Sunny",
-      "mood": "Happy",
-      "location": "Central Park",
-      "date": "2023-10-05T10:00:00Z"
-    },
-    "tags": ["life", "daily"]
+    "total": 0,
+    "totalPages": 0,
+    "currentPage": 0
   }
   ```
 
-### 5.4 更新碎片
-- **URL**: `/backstage/snippets/update`
-- **Method**: `POST`
-- **请求参数**:
-  ```json
-  {
-    "id": "1",
-    "content": [...]
-  }
-  ```
-
-### 5.5 删除碎片
-- **URL**: `/backstage/snippets/delete`
-- **Method**: `POST`
-- **请求参数**:
-  ```json
-  {
-    "id": "1"
-  }
-  ```
-
-## 6. 分类与标签 (Taxonomy)
-
-### 6.1 获取所有分类
-- **URL**: `/backstage/categories`
+### 11.2 获取博客文章详情
+- **URL**: `/api/v1/nest/blog/{id}`
 - **Method**: `GET`
-- **响应数据**: `[{ "id": "1", "name": "技术", "count": 10, "icon": "CodeOutlined", "color": "blue" }]`
-
-### 6.2 创建分类
-- **URL**: `/backstage/categories/create`
-- **Method**: `POST`
-- **请求参数**: `{ "name": "新分类", "icon": "...", "color": "..." }`
-
-### 6.3 更新分类
-- **URL**: `/backstage/categories/update`
-- **Method**: `POST`
-- **请求参数**: `{ "id": "1", "name": "更新分类", "icon": "...", "color": "..." }`
-
-### 6.4 删除分类
-- **URL**: `/backstage/categories/delete`
-- **Method**: `POST`
-- **请求参数**: `{ "id": "1" }`
-
-### 6.5 获取所有标签
-- **URL**: `/backstage/tags`
-- **Method**: `GET`
-- **响应数据**: `[{ "id": "1", "name": "React", "count": 5, "color": "cyan" }]`
-
-### 6.6 创建标签
-- **URL**: `/backstage/tags/create`
-- **Method**: `POST`
-- **请求参数**: `{ "name": "新标签", "color": "cyan" }`
-
-### 6.7 更新标签
-- **URL**: `/backstage/tags/update`
-- **Method**: `POST`
-- **请求参数**: `{ "id": "1", "name": "更新标签", "color": "blue" }`
-
-### 6.8 删除标签
-- **URL**: `/backstage/tags/delete`
-- **Method**: `POST`
-- **请求参数**: `{ "id": "1" }`
-
-## 7. 通用接口 (Common)
-
-### 7.1 文件上传
-- **URL**: `/backstage/upload`
-- **Method**: `POST`
-- **Content-Type**: `multipart/form-data`
-- **请求参数**: `file` (Binary)
+- **描述**: 获取博客文章详情，包括正文内容。同时会增加文章的浏览量。仅能获取已发布（published）的文章。
 - **响应数据**:
   ```json
   {
-    "url": "https://your-oss-bucket.com/path/to/image.jpg",
-    "filename": "image.jpg"
+    "id": "string",
+    "title": "string",
+    "desc": "string",
+    "slug": "string",
+    "cover": "string",
+    "date": "string",
+    "content": "string",
+    "category": {
+      "id": "string",
+      "name": "string"
+    },
+    "tags": [
+      "string"
+    ],
+    "views": 0
   }
   ```
+
+### 11.3 获取分类统计
+- **URL**: `/api/v1/nest/blog/categories`
+- **Method**: `GET`
+- **描述**: 获取博客分类统计数据。
+- **响应数据**:
+  ```json
+  [
+    {
+      "id": "string",
+      "name": "string",
+      "count": 0,
+      "icon": "string"
+    }
+  ]
+  ```
+
+### 11.4 获取标签统计列表
+- **URL**: `/api/v1/nest/blog/tags`
+- **Method**: `GET`
+- **描述**: 获取所有标签及其关联的文章数量统计。无关联文章的标签 count 为 0。
+- **响应数据**:
+  ```json
+  [
+    {
+      "name": "string",
+      "count": 0
+    }
+  ]
+  ```
+
+## 12. Other
+
+### 11.1 Root
+- **URL**: `/`
+- **Method**: `GET`
+- **响应数据**:
+  (无返回数据)
+
