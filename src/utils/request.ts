@@ -3,6 +3,7 @@ import adapterFetch from 'alova/fetch';
 import { retry } from 'alova/server'; 
 import { message } from 'antd';
 import { useAuthStore } from '../stores/authStore';
+import { normalizeHttpUrlsToHttps } from './normalizeHttpsUrls';
 
 // 定义 API 响应的基础结构 
 export interface ApiResponse<T = any> { 
@@ -101,7 +102,7 @@ export const alovaInstance = createAlova({
       if (json.code !== 200) {
         throw new Error(json.message || '请求失败');
       }
-      return json.data;
+      return normalizeHttpUrlsToHttps(json.data);
     },
 
     // 响应错误拦截器
