@@ -3,7 +3,8 @@
 | 任务 | 入口 | 来源与边界 |
 | --- | --- | --- |
 | 开发启动、生产构建 | [README.md](../README.md) | Node 和脚本以 package.json、.nvmrc 为准 |
-| Cloudflare 发布 | [README 发布指南](../README.md#-部署指南) | 2026-11-06 控制台截图及用户补充确认；用户确认仅部署 main，其他分支无自动预览 |
+| Cloudflare 发布 | [README 发布指南](../README.md#-部署指南) | 2026-11-06 控制台截图及用户补充确认；生产分支 main；PR #11 已观察到功能分支自动预览 |
+| 本次发布检查证据 | [release-evidence.md](release-evidence.md) | PR #11 分支预览实际检查结果 |
 | 旧 Docker 服务 / 手动部署 | README 同节、deploy.sh、Dockerfile、docker-compose.yml、nginx.conf | 用户确认仍在使用，可能停止更新；不参与 Cloudflare 自动发布 |
 | 开发环境 / 问题定位 | [environment.md](environment.md) | 本地配置与排查入口，不含在线验证 |
 | API 调用约定与边界 | [api-integration.md](api-integration.md) | 从 request 与各业务 API 提取 |

@@ -124,7 +124,7 @@ npm run preview
 | Pages 项目 | `devinnest-backstage` |
 | GitHub 仓库 | `Devinyy/DevinNest-Backstage` |
 | 生产分支 | `main` |
-| 自动部署 | 已启用，仅部署 `main`；其他分支不自动预览部署（用户确认） |
+| 自动部署 | 生产分支为 `main`；当前功能分支已观察到自动预览部署 |
 | 构建命令 | `npm run build` |
 | 构建输出目录 | `dist` |
 | 根目录 | 未单独指定（项目根目录） |
@@ -137,7 +137,7 @@ npm run preview
 | Pages 默认地址 | https://devinnest-backstage.pages.dev |
 | 生产 API 变量来源 | 仓库 `.env.production`，Cloudflare 未配置 `VITE_API_BASE_URL` 覆盖值 |
 
-用户已确认绑定的正式域名为 `https://devinnest-backstage.top`，生产 API 使用仓库 `.env.production`。用户已确认仅部署 `main`，其他分支不自动创建预览部署。
+用户已确认绑定的正式域名为 `https://devinnest-backstage.top`，生产 API 使用仓库 `.env.production`。此前用户认为仅部署 `main`；2026-11-06 PR #11 的 Cloudflare 检查实际成功创建了 `codex/harness-progressive-docs` 分支预览。因此生产发布仍以 `main` 为准，但至少当前功能分支支持自动预览；其他分支的具体匹配规则需以控制台配置为准。
 
 **发布步骤**：
 
